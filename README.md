@@ -34,6 +34,10 @@ If you don't want to do this you can just install the dependencies globally usin
 
 But personally I prefer using virtual envs - less pollution in my environment.
 
+## Code style
+
+I've set up flake8 for linting in the CI pipeline. In vscode, you can set the default linter to flake8 in the settings. I'm also using autopep8 locally in vscode for auto formatting. In PyCharm there's probably some way to setup linting and formatting but since I don't have it locally you'll have to play around with it. Lmk if it gets too annoying and we can maybe adjust stuff.
+
 ## Accessing the staging server
 
 You can access the deployed application at http://146.169.42.170:8000.

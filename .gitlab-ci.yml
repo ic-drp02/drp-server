@@ -1,8 +1,18 @@
 image: python:3.6
 
 stages:
+  - check
   - test
   - deploy
+
+before_script:
+  - python3 -m venv .venv
+  - source .venv/bin/activate
+  - pip install -r requirements.txt
+
+check:
+  stage: check
+  script: flake8 drp/
 
 test:
   stage: test
@@ -17,9 +27,6 @@ deploy-staging:
     - chmod 700 ~/.ssh
   script:
     - echo "Deploying on `hostname -i`"
-    - python3 -m venv .venv
-    - source .venv/bin/activate
-    - pip install -r requirements.txt
     - ./scripts/restart.sh
   only:
     - master
