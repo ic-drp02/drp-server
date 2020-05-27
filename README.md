@@ -24,6 +24,8 @@ Any time you open a new shell, you'll need to reactivate the venv:
 > source .venv/bin/activate
 ```
 
+If you ~~are a man of culture :)~~ use vscode with the python extension, this is done automatically when you open a terminal (in vscode of course).
+
 If you don't want to do this you can just install the dependencies globally using just:
 
 ```
