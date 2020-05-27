@@ -28,6 +28,9 @@ deploy-staging:
     # This has to be duplicated here because this `before_script` overrides the global one
     - python3 -m venv .venv
     - source .venv/bin/activate
+    # Don't know why this is necessary, but it fixes some errors
+    - pip install wheel
+    # ----------------------------------------------------------
     - pip install -r requirements.txt
   script:
     - echo "Deploying on `hostname -i`"
