@@ -1,0 +1,27 @@
+image: python:3.6-alpine
+
+before_script:
+  - "which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )"
+  - eval $(ssh-agent -s)
+  - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+  - mkdir -p ~/.ssh
+  - chmod 700 ~/.ssh
+
+stages:
+  - test
+  - deploy
+
+test:
+  stage: test
+  script: echo "No tests at the moment :("
+
+deploy-staging:
+  stage: deploy
+  script:
+    - echo "Deploying on `hostname -i`"
+    - python3 -m venv .venv
+    - source .venv/bin/activate
+    - pip install -r requirements.txt
+    - ./scripts/restart.sh
+  tags:
+    - deploy-staging
