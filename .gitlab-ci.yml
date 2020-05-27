@@ -25,6 +25,10 @@ deploy-staging:
     - echo "$STAGING_SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
+    # This has to be duplicated here because this `before_script` overrides the global one
+    - python3 -m venv .venv
+    - source .venv/bin/activate
+    - pip install -r requirements.txt
   script:
     - echo "Deploying on `hostname -i`"
     - ./scripts/restart.sh
