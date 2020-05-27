@@ -6,13 +6,13 @@ This isn't strictly neccessary but you probably want to install the dependencies
 
 Make sure you have python3-venv:
 
-```
+```sh
 > sudo apt install python3-venv
 ```
 
 Then in the project root run:
 
-```
+```sh
 > python3 -m venv .venv             # Create the virtual environment
 > source .venv/bin/activate         # Activate the virtual environment in your shell
 > pip install -r requirements.txt   # Install project dependencies
@@ -20,7 +20,7 @@ Then in the project root run:
 
 Any time you open a new shell, you'll need to reactivate the venv:
 
-```
+```sh
 > source .venv/bin/activate
 ```
 
@@ -28,11 +28,37 @@ If you ~~are a man of culture :)~~ use vscode with the python extension, this is
 
 If you don't want to do this you can just install the dependencies globally using just:
 
-```
+```sh
 > pip install -r requirements.txt
 ```
 
 But personally I prefer using virtual envs - less pollution in my environment.
+
+## Running the app
+
+Since we're gonna be using a database, you'll obviously need one locally for development - we don't want to mess with the actual database in development! You could manually install postgres, but that may or may not end up being a pain. The other option is to install docker and docker-compose and then just run
+
+```sh
+> docker-compose up
+```
+
+in the project root. This will run postgres in a docker container on your machine, exposing it on port 5432 with a default database called `postgres`. The username is `postgres` and the password is `drp-dev`. To destroy the database just run
+
+```sh
+> docker-compose down
+```
+
+This is useful if you screw up something while playing around.
+
+TODO: Document migrations when we actually start using the database
+
+Then to run the flask app, you can run:
+
+```sh
+> flask run
+```
+
+Nice and simple!
 
 ## Code style
 
@@ -44,7 +70,7 @@ You can access the deployed application at http://146.169.42.170:8000.
 
 Unfortunately, this is an internal IP address so you'll need to either connect to the Imperial VPN (I've never gotten it to work), or use SSH tunnelling. This can be done by running:
 
-```
+```sh
 > ssh -N -D 12345 YOUR_USERNAME@shell1.doc.ic.ac.uk
 ```
 
