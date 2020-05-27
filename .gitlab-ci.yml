@@ -20,6 +20,8 @@ test:
 
 deploy-staging:
   stage: deploy
+  variables:
+    DATABASE_URI: $STAGING_DB_URI
   before_script:
     - eval $(ssh-agent -s)
     - echo "$STAGING_SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -

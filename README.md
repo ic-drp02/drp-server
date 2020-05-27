@@ -55,6 +55,7 @@ TODO: Document migrations when we actually start using the database
 Then to run the flask app, you can run:
 
 ```sh
+> export FLASK_ENV=development
 > flask run
 ```
 

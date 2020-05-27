@@ -1,6 +1,15 @@
 from flask import Flask, escape, request
+from flask_sqlalchemy import SQLAlchemy
+
+from . import config
 
 app = Flask(__name__)
+
+app.config["SQLALCHEMY_DATABASE_URI"] = config.DATABASE_URI
+app.config["SQLALCHEMY_ECHO"] = config.IS_DEV_ENV
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+db = SQLAlchemy(app)
 
 
 @app.route("/")
@@ -10,14 +19,19 @@ def hello():
 
 # Example database code
 #
-# from sqlalchemy import create_engine
+# from flask import jsonify
 #
-# db = create_engine(
-#     "postgresql://postgres:drp-dev@localhost:5432/postgres")
+# class User(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     username = db.Column(db.String(80), unique=True, nullable=False)
+#     email = db.Column(db.String(120), unique=True, nullable=False)
 
-# db.execute("CREATE TABLE IF NOT EXISTS users (name TEXT, email TEXT)")
-# db.execute("INSERT INTO users (name, email) VALUES ('Bob', 'bob@gmail.com')")
-
-# results = db.execute("SELECT * FROM users")
-# for row in results:
-#     print(row)
+#     def __repr__(self):
+#         return f"<User {self.username}>"
+#
+#
+# @app.route("/users/")
+# def get_users():
+#     users = [{'username': user.username, 'email': user.email}
+#              for user in User.query.all()]
+#     return jsonify(users)
