@@ -1,6 +1,6 @@
 # NHS Guidelines App - Backend Server
 
-## Tips for local devlopment
+## Tips for local development
 
 This isn't strictly neccessary but you probably want to install the dependencies in a python virtual environment to avoid conflicts.
 
