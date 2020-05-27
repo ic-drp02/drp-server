@@ -39,7 +39,7 @@ But personally I prefer using virtual envs - less pollution in my environment.
 Since we're gonna be using a database, you'll obviously need one locally for development - we don't want to mess with the actual database in development! You could manually install postgres, but that may or may not end up being a pain. The other option is to install docker and docker-compose and then just run
 
 ```sh
-> docker-compose up
+> docker-compose up db
 ```
 
 in the project root. This will run postgres in a docker container on your machine, exposing it on port 5432 with a default database called `postgres`. The username is `postgres` and the password is `drp-dev`. To destroy the database just run
