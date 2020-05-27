@@ -21,5 +21,7 @@ deploy-staging:
     - source .venv/bin/activate
     - pip install -r requirements.txt
     - ./scripts/restart.sh
+  only:
+    - master
   tags:
     - deploy-staging
