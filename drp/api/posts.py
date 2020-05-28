@@ -96,18 +96,22 @@ class PostListResource(Resource):
         """
         body = request.json
 
-        title = body["title"]
+        title = body.get("title")
         summary = body.get("summary")
-        content = body["content"]
+        content = body.get("content")
+
+        if title is None or content is None:
+            return abort(400,
+                         message="`title` and `content` fields are required.")
 
         def error_message(name, count):
-            return f"{name} must not be more than {count} characters."
+            return f"`{name}` must not be more than {count} characters."
 
         if len(title) > 120:
-            return abort(400, message=error_message("Title", 120))
+            return abort(400, message=error_message("title", 120))
 
         if summary is not None and len(summary) > 120:
-            return abort(400, message=error_message("Summary", 200))
+            return abort(400, message=error_message("summary", 200))
 
         post = Post(title=title, summary=summary, content=content)
 

@@ -26,6 +26,16 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:9.6-alpine
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_PASSWORD: "drp-dev"
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
     steps:
       - name: Checkout git repo
         uses: actions/checkout@v2
@@ -41,7 +51,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run tests
-        run: echo "No tests at the moment :("
+        run: pytest tests -v
 
   deploy:
     runs-on: ubuntu-latest

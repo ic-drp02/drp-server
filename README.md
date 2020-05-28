@@ -65,6 +65,22 @@ This will run the database migrations, which creates all the tables. Then to run
 
 Nice and simple!
 
+## Running the tests
+
+You will need a database running in order to run the tests. See above for instructions on how to set this up. To set the uri of the database, run:
+
+```sh
+> export TEST_DATABASE_URI="postgresql://[USERNAME]:[PASSWORD]@[SERVER]:[PORT]/[DATABASE_NAME]"
+```
+
+By default if this environment variable is not set, the database from above is used. To run the tests:
+
+```sh
+> pytest tests -v
+```
+
+> :warning: **Running the tests will delete all data in the database!**
+
 ## Code style
 
 I've set up flake8 for linting in the CI pipeline. In vscode, you can set the default linter to flake8 in the settings. I'm also using autopep8 locally in vscode for auto formatting. In PyCharm there's probably some way to setup linting and formatting but since I don't have it locally you'll have to play around with it. Lmk if it gets too annoying and we can maybe adjust stuff.

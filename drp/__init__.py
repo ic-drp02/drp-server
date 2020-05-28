@@ -11,12 +11,12 @@ def create_app(test_config=None):
     app = Flask(__name__)
 
     # Load configuration
-    if test_config is None:
-        app.config["SQLALCHEMY_DATABASE_URI"] = config.DATABASE_URI
-        app.config["SQLALCHEMY_ECHO"] = config.IS_DEV_ENV
-        app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-    else:
-        app.config.from_mapping(test_config)
+    app.config["SQLALCHEMY_DATABASE_URI"] = config.DATABASE_URI
+    app.config["SQLALCHEMY_ECHO"] = config.IS_DEV_ENV
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+    if test_config is not None:
+        app.config.update(test_config)
 
     # Register app with database
     db.init_app(app)
