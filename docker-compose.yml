@@ -1,13 +1,23 @@
-version: "3.0"
+version: "2.1"
 
 services:
-  web:
-    build: .
-    ports:
-      - 8000:8000
   db:
     image: postgres:9.6
     ports:
       - 5432:5432
     environment:
       POSTGRES_PASSWORD: "drp-dev"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  web:
+    build: .
+    ports:
+      - 8000:8000
+    environment:
+      DATABASE_URI: "postgresql://postgres:drp-dev@db:5432/postgres"
+    depends_on:
+      db:
+        condition: service_healthy
