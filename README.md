@@ -1,5 +1,17 @@
 # NHS Guidelines App - Backend Server
 
+## Running the app
+
+To just get a server and database up and running as quickly as possible:
+
+```
+> docker-compose up
+```
+
+This will run the application in _roughly_ the same environment as production (i.e. with the production web server - Gunicorn).
+The server runs on port 8000 and the database is on port 5432.
+If you are working on the server itself, you probably want to use development mode. See below for instructions.
+
 ## Tips for local development
 
 This isn't strictly neccessary but you probably want to install the dependencies in a python virtual environment to avoid conflicts.
@@ -34,7 +46,7 @@ If you don't want to do this you can just install the dependencies globally usin
 
 But personally I prefer using virtual envs - less pollution in my environment.
 
-## Running the app
+## Running the app in development
 
 Since we're gonna be using a database, you'll obviously need one locally for development - we don't want to mess with the actual database in development! You could manually install postgres, but that may or may not end up being a pain. The other option is to install docker and docker-compose and then just run
 
