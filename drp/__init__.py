@@ -21,6 +21,11 @@ def create_app(test_config=None):
     # Register app with database
     db.init_app(app)
 
+    # Run database migrations
+    with app.app_context():
+        import flask_migrate
+        flask_migrate.upgrade()
+
     # Initialise flasggr
     swag.init_app(app)
 
