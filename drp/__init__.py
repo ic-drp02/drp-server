@@ -1,8 +1,9 @@
 from flask import Flask, escape, request
+from flask_restful import Api
 
 from . import config
 from .db import db
-from .posts import posts
+from .api.posts import PostListResource
 
 
 def create_app(test_config=None):
@@ -19,8 +20,8 @@ def create_app(test_config=None):
     # Register app with database
     db.init_app(app)
 
-    # Register blueprints with app
-    app.register_blueprint(posts)
+    api = Api(app)
+    api.add_resource(PostListResource, "/posts")
 
     @app.route("/")
     def hello():
