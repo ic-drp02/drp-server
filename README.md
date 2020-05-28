@@ -64,18 +64,3 @@ Nice and simple!
 ## Code style
 
 I've set up flake8 for linting in the CI pipeline. In vscode, you can set the default linter to flake8 in the settings. I'm also using autopep8 locally in vscode for auto formatting. In PyCharm there's probably some way to setup linting and formatting but since I don't have it locally you'll have to play around with it. Lmk if it gets too annoying and we can maybe adjust stuff.
-
-## Accessing the staging server
-
-You can access the deployed application at http://146.169.42.170:8000.
-
-Unfortunately, this is an internal IP address so you'll need to either connect to the Imperial VPN (I've never gotten it to work), or use SSH tunnelling. This can be done by running:
-
-```sh
-> ssh -N -D 12345 YOUR_USERNAME@shell1.doc.ic.ac.uk
-```
-
-and then configuring your web browser or OS to proxy traffic over port 12345.
-
-- On Chrome/Edge [this](https://chrome.google.com/webstore/detail/proxy-switchyomega/padekgcemlokbadohgkifijomclgjgif) is a nice extension.
-- On Firefox you can play around in the network settings.
