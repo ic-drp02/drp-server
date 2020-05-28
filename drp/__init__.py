@@ -3,6 +3,7 @@ from flask_restful import Api
 
 from . import config
 from .db import db
+from .swag import swag
 from .api.posts import PostListResource
 
 
@@ -20,6 +21,10 @@ def create_app(test_config=None):
     # Register app with database
     db.init_app(app)
 
+    # Initialise flasggr
+    swag.init_app(app)
+
+    # Register api routes
     api = Api(app)
     api.add_resource(PostListResource, "/posts")
 

@@ -6,10 +6,30 @@ from ..models.post import Post
 
 
 class PostListResource(Resource):
+
     def get(self):
+        """
+        Gets a list of all posts.
+        ---
+        responses:
+          200:
+            schema:
+              type: array
+              items:
+                $ref: "#/definitions/Post"
+
+        """
         return [post.serialize() for post in Post.query.all()]
 
     def post(self):
+        """
+        Creates a new post.
+        ---
+        responses:
+          200:
+            schema:
+              $ref: "#/definitions/Post"
+        """
         body = request.json
 
         title = body["title"]
