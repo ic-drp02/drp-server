@@ -2,7 +2,7 @@ from flask import request
 from flask_restful import Resource, abort
 
 from ..db import db
-from ..models.post import Post
+from ..models import Post
 
 
 class PostResource(Resource):
