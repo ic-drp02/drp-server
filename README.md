@@ -50,9 +50,13 @@ in the project root. This will run postgres in a docker container on your machin
 
 This is useful if you screw up something while playing around.
 
-TODO: Document migrations when we actually start using the database
+Once you have a database set up, you should run:
 
-Then to run the flask app, you can run:
+```sh
+> flask db upgrade
+```
+
+This will run the database migrations, which creates all the tables. Then to run the flask app, you can run:
 
 ```sh
 > export FLASK_ENV=development
