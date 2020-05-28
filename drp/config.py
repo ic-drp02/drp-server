@@ -1,7 +1,7 @@
 import os
 
-if "DB_URI" in os.environ:
-    DATABASE_URI = os.environ.get["DATABASE_URI"]
+if "DATABASE_URI" in os.environ:
+    DATABASE_URI = os.environ.get("DATABASE_URI")
 else:
     DATABASE_URI = "postgresql://postgres:drp-dev@localhost:5432/postgres"
 
