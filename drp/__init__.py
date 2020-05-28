@@ -4,7 +4,7 @@ from flask_restful import Api
 from . import config
 from .db import db
 from .swag import swag
-from .api.posts import PostListResource
+from .api.posts import PostResource, PostListResource
 
 
 def create_app(test_config=None):
@@ -26,6 +26,7 @@ def create_app(test_config=None):
 
     # Register api routes
     api = Api(app)
+    api.add_resource(PostResource, "/posts/<int:id>")
     api.add_resource(PostListResource, "/posts")
 
     @app.route("/")
