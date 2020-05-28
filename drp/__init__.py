@@ -2,11 +2,13 @@ from flask import Flask, escape, request
 
 from . import config
 from .db import db
+from .posts import posts
 
 
 def create_app(test_config=None):
     app = Flask(__name__)
 
+    # Load configuration
     if test_config is None:
         app.config["SQLALCHEMY_DATABASE_URI"] = config.DATABASE_URI
         app.config["SQLALCHEMY_ECHO"] = config.IS_DEV_ENV
@@ -14,30 +16,15 @@ def create_app(test_config=None):
     else:
         app.config.from_mapping(test_config)
 
+    # Register app with database
     db.init_app(app)
+
+    # Register blueprints with app
+    app.register_blueprint(posts)
 
     @app.route("/")
     def hello():
         name = request.args.get("name", "World")
         return f"Hello, {escape(name)}!"
-
-    # Example database code
-    #
-    # from flask import jsonify
-    #
-    # class User(db.Model):
-    #     id = db.Column(db.Integer, primary_key=True)
-    #     username = db.Column(db.String(80), unique=True, nullable=False)
-    #     email = db.Column(db.String(120), unique=True, nullable=False)
-
-    #     def __repr__(self):
-    #         return f"<User {self.username}>"
-    #
-    #
-    # @app.route("/users/")
-    # def get_users():
-    #     users = [{'username': user.username, 'email': user.email}
-    #              for user in User.query.all()]
-    #     return jsonify(users)
 
     return app
