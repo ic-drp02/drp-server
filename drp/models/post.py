@@ -1,3 +1,5 @@
+import pytz
+
 from sqlalchemy.sql import func
 
 from ..db import db
@@ -27,7 +29,7 @@ class Post(db.Model):
     summary = db.Column(db.String(200))
     content = db.Column(db.Text())
 
-    created_at = db.Column(db.DateTime, nullable=False,
+    created_at = db.Column(db.DateTime(timezone=True), nullable=False,
                            server_default=func.now())
 
     def serialize(self):
@@ -36,7 +38,7 @@ class Post(db.Model):
             "title": self.title,
             "summary": self.summary,
             "content": self.content,
-            "created_at": self.created_at.isoformat(),
+            "created_at": self.created_at.astimezone(pytz.utc).isoformat(),
         }
 
     def __repr__(self):
