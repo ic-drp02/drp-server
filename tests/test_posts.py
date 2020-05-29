@@ -165,3 +165,34 @@ def test_delete_single_post_that_doesnt_exist(app, db):
 
     with app.app_context():
         assert Post.query.count() == 1
+
+
+def test_timezone_utc(app, db):
+    """
+    Ensure that api returns datetimes in utc.
+    """
+
+    title = "A title"
+    summary = "A short summary"
+    content = "A few paragraphs of content..."
+
+    with app.app_context():
+        post = Post(title=title, summary=summary, content=content)
+        db.session.add(post)
+        db.session.commit()
+        id = post.id
+
+    with app.test_client() as client:
+        response = client.get(f"/posts/{id}")
+
+        assert "200" in response.status
+
+        post = json.loads(response.data.decode("utf-8"))
+
+        from datetime import datetime, timedelta
+
+        utc_now = datetime.utcnow()
+        created_at = datetime.fromisoformat(
+            post["created_at"]).replace(tzinfo=None)
+
+        assert utc_now - created_at < timedelta(milliseconds=5000)
