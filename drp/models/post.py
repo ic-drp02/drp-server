@@ -25,7 +25,7 @@ class Post(db.Model):
         type: string
     """
 
-    __tablename__ = "post"
+    __tablename__ = "posts"
 
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(120), nullable=False)
@@ -52,14 +52,15 @@ class Post(db.Model):
 
 
 class Tag(db.Model):
-    __tablename__ = "tag"
+    __tablename__ = "tags"
 
-    name = db.Column(db.String(30), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(30), unique=True)
 
     posts = relationship("Post", secondary="post_tag")
 
     def serialize(self):
-        return self.name
+        return {"id": self.id, "name": self.name}
 
     def __repr__(self):
         return f"<Tag '{self.name}'>"
@@ -69,12 +70,12 @@ class Post_Tag(db.Model):
     __tablename__ = "post_tag"
 
     post_id = db.Column(db.Integer,
-                        db.ForeignKey("post.id"),
+                        db.ForeignKey("posts.id"),
                         primary_key=True)
 
-    tag_name = db.Column(db.String(30),
-                         db.ForeignKey("tag.name"),
-                         primary_key=True)
+    tag_id = db.Column(db.Integer,
+                       db.ForeignKey("tags.id"),
+                       primary_key=True)
 
     post = relationship(Post)
     tag = relationship(Tag)
