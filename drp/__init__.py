@@ -34,7 +34,7 @@ def create_app(test_config=None):
     api.add_resource(res.PostResource, "/posts/<int:id>")
     api.add_resource(res.PostListResource, "/posts")
 
-    api.add_resource(res.TagResource, "/tags/<string:name>")
+    api.add_resource(res.TagResource, "/tags/<int:id>")
     api.add_resource(res.TagListResource, "/tags")
 
     @app.route("/")

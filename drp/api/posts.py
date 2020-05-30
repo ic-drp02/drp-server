@@ -7,6 +7,8 @@ from ..db import db
 from ..models import Post, Tag
 from ..swag import swag
 
+from .tags import serialize_tag
+
 
 @swag.definition("Post")
 def serialize_post(post):
@@ -27,7 +29,7 @@ def serialize_post(post):
       tags:
         type: array
         items:
-          type: string
+          $ref: "#/definitions/Tag"
     """
     return {
         "id": post.id,
@@ -35,7 +37,7 @@ def serialize_post(post):
         "summary": post.summary,
         "content": post.content,
         "created_at": post.created_at.astimezone(pytz.utc).isoformat(),
-        "tags": [tag.serialize() for tag in post.tags]
+        "tags": [serialize_tag(tag) for tag in post.tags]
     }
 
 

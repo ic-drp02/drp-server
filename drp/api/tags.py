@@ -27,14 +27,14 @@ def serialize_tag(tag):
 
 class TagResource(Resource):
 
-    def delete(self, name):
+    def delete(self, id):
         """
-        Deletes a single tag by name.
+        Deletes a single tag by id.
         ---
         parameters:
-          - name: name
+          - name: id
             in: path
-            type: string
+            type: integer
             required: true
         responses:
           204:
@@ -42,7 +42,7 @@ class TagResource(Resource):
           404:
             description: Not found
         """
-        tag = Tag.query.filter(Tag.name == name).one_or_none()
+        tag = Tag.query.filter(Tag.id == id).one_or_none()
 
         if tag is None:
             return abort(404)
