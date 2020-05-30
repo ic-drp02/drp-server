@@ -1,30 +1,10 @@
-import pytz
-
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 
 from ..db import db
-from .. import swag
 
 
-@swag.definition("Post")
 class Post(db.Model):
-    """
-    Represents a post.
-    ---
-    properties:
-      id:
-        type: integer
-      title:
-        type: string
-      summary:
-        type: string
-      content:
-        type: string
-      created_at:
-        type: string
-    """
-
     __tablename__ = "posts"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -37,16 +17,6 @@ class Post(db.Model):
 
     tags = relationship("Tag", secondary="post_tag")
 
-    def serialize(self):
-        return {
-            "id": self.id,
-            "title": self.title,
-            "summary": self.summary,
-            "content": self.content,
-            "created_at": self.created_at.astimezone(pytz.utc).isoformat(),
-            "tags": [tag.serialize() for tag in self.tags]
-        }
-
     def __repr__(self):
         return f"<Post '{self.title}'>"
 
@@ -58,9 +28,6 @@ class Tag(db.Model):
     name = db.Column(db.String(30), unique=True)
 
     posts = relationship("Post", secondary="post_tag")
-
-    def serialize(self):
-        return {"id": self.id, "name": self.name}
 
     def __repr__(self):
         return f"<Tag '{self.name}'>"

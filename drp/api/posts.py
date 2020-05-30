@@ -1,8 +1,42 @@
+import pytz
+
 from flask import request
 from flask_restful import Resource, abort
 
 from ..db import db
-from ..models import Post
+from ..models import Post, Tag
+from ..swag import swag
+
+
+@swag.definition("Post")
+def serialize_post(post):
+    """
+    Represents a post.
+    ---
+    properties:
+      id:
+        type: integer
+      title:
+        type: string
+      summary:
+        type: string
+      content:
+        type: string
+      created_at:
+        type: string
+      tags:
+        type: array
+        items:
+          type: string
+    """
+    return {
+        "id": post.id,
+        "title": post.title,
+        "summary": post.summary,
+        "content": post.content,
+        "created_at": post.created_at.astimezone(pytz.utc).isoformat(),
+        "tags": [tag.serialize() for tag in post.tags]
+    }
 
 
 class PostResource(Resource):
@@ -24,7 +58,7 @@ class PostResource(Resource):
             description: Not found
         """
         post = Post.query.filter(Post.id == id).one_or_none()
-        return post.serialize() if post is not None else abort(404)
+        return serialize_post(post) if post is not None else abort(404)
 
     def delete(self, id):
         """
@@ -66,7 +100,7 @@ class PostListResource(Resource):
                 $ref: "#/definitions/Post"
 
         """
-        return [post.serialize() for post in Post.query.all()]
+        return [serialize_post(post) for post in Post.query.all()]
 
     def post(self):
         """
@@ -89,6 +123,11 @@ class PostListResource(Resource):
                 content:
                   required: true
                   type: string
+                tags:
+                  required: false
+                  type: array
+                  items:
+                    type: string
         responses:
           200:
             schema:
@@ -99,6 +138,7 @@ class PostListResource(Resource):
         title = body.get("title")
         summary = body.get("summary")
         content = body.get("content")
+        tag_names = body.get("tags") or []
 
         if title is None or content is None:
             return abort(400,
@@ -113,9 +153,20 @@ class PostListResource(Resource):
         if summary is not None and len(summary) > 120:
             return abort(400, message=error_message("summary", 200))
 
-        post = Post(title=title, summary=summary, content=content)
+        tags = None
+
+        if len(tag_names) != 0:
+            tags = Tag.query.filter(Tag.name.in_(tag_names))
+            if tags.count() < len(tag_names):
+                return abort(400, message="Invalid tags - all tags must be"
+                             " predefined through the tags api.")
+
+        tags = tags.all() if tags is not None else []
+
+        post = Post(title=title, summary=summary,
+                    content=content, tags=tags)
 
         db.session.add(post)
         db.session.commit()
 
-        return post.serialize()
+        return serialize_post(post)
