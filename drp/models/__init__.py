@@ -1,3 +1,3 @@
-from .post import Post
+from .post import Post, Tag
 
-__all__ = ["Post"]
+__all__ = ["Post", "Tag"]
