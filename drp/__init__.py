@@ -1,10 +1,9 @@
 from flask import Flask, escape, request
 from flask_restful import Api
 
-from . import config
+from . import config, api as res
 from .db import db
 from .swag import swag
-from .api import PostResource, PostListResource
 
 
 def create_app(test_config=None):
@@ -22,17 +21,21 @@ def create_app(test_config=None):
     db.init_app(app)
 
     # Run database migrations
-    with app.app_context():
-        import flask_migrate
-        flask_migrate.upgrade()
+    # with app.app_context():
+    #     import flask_migrate
+    #     flask_migrate.upgrade()
 
     # Initialise flasggr
     swag.init_app(app)
 
     # Register api routes
     api = Api(app)
-    api.add_resource(PostResource, "/posts/<int:id>")
-    api.add_resource(PostListResource, "/posts")
+
+    api.add_resource(res.PostResource, "/posts/<int:id>")
+    api.add_resource(res.PostListResource, "/posts")
+
+    api.add_resource(res.TagResource, "/tags/<int:id>")
+    api.add_resource(res.TagListResource, "/tags")
 
     @app.route("/")
     def hello():

@@ -1,6 +1,6 @@
 import json
 
-from drp.models import Post
+from drp.models import Post, Tag
 
 
 def create_posts(app, db, posts):
@@ -76,6 +76,46 @@ def test_create_post_with_no_summary(app, db):
         assert "created_at" in data
 
         assert data.get("summary") is None
+
+
+def test_create_post_with_tags(app, db):
+
+    with app.app_context():
+        t1 = Tag(name="Tag 1")
+        t2 = Tag(name="Tag 2")
+
+        db.session.add(t1)
+        db.session.add(t2)
+        db.session.commit()
+
+        id1 = t1.id
+        id2 = t2.id
+
+    with app.test_client() as client:
+        post = {
+            "title": "A title",
+            "content": "A few paragraphs of content...",
+            "tags": ["Tag 1", "Tag 2"]
+        }
+
+        response = client.post("/posts", json=post)
+
+        assert "200" in response.status
+
+        data = json.loads(response.data.decode("utf-8"))
+
+        assert post["title"] == data["title"]
+        assert post["content"] == data["content"]
+
+        assert "id" in data
+        assert "created_at" in data
+
+        assert data.get("summary") is None
+
+        print(f"______TAGS_____: {post['tags']}")
+
+        assert {"id": id1, "name": "Tag 1"} in data["tags"]
+        assert {"id": id2, "name": "Tag 2"} in data["tags"]
 
 
 def test_create_post_with_missing_title(app, db):
