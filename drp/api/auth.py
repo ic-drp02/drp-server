@@ -2,6 +2,7 @@ from flask import request
 from flask_restful import Resource, abort
 
 from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError
 from jwt import encode
 from datetime import datetime, timedelta
 
@@ -62,7 +63,9 @@ class AuthResource(Resource):
 
         hasher = PasswordHasher()
 
-        if not hasher.verify(user.password_hash, password):
+        try:
+            hasher.verify(user.password_hash, password)
+        except VerifyMismatchError:
             return abort(401)
 
         if hasher.check_needs_rehash(user.password_hash):
