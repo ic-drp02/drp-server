@@ -19,3 +19,10 @@ ALLOWED_FILE_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg',
                            'xls', 'xlsx', 'ppt', 'pptx',
                            'ods', 'fods', 'ods', 'fods',
                            'odp', 'fodp', 'md'}
+JWT_ISSUER = "drp02"
+JWT_AUDIENCE = "drp02"
+
+if IS_DEV_ENV:
+    JWT_SECRET_KEY = "bhO.#v8En8ka8O|ZX*59B`kD3V7ZF7#V^u67TkMCV50.:H7awQ3MTGHJIJd>H<N"  # noqa: E501
+else:
+    JWT_SECRET_KEY = os.environ["JWT_SECRET_KEY"]
