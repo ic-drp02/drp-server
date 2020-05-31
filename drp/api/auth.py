@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 
 from .. import config
 from ..db import db
-from ..models import User
+from ..models import User, UserRole
 from ..swag import swag
 
 
@@ -77,11 +77,12 @@ class AuthResource(Resource):
         expiration_time = now + timedelta(hours=2)
 
         claims = {
-            "iat": now.isoformat(),
-            "exp": expiration_time.isoformat(),
+            "iat": now.strftime("%s"),
+            "exp": expiration_time.strftime("%s"),
             "iss": config.JWT_ISSUER,
             "aud": config.JWT_AUDIENCE,
-            "sub": username
+            "sub": username,
+            "rol": "admin" if user.role == UserRole.ADMIN else "normal",
         }
 
         token = encode(claims, config.JWT_SECRET_KEY, algorithm="HS256")

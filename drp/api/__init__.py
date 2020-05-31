@@ -9,6 +9,7 @@ from .questions import QuestionResource, QuestionListResource, questions
 from .site import SiteResource, SiteListResource
 from .subject import SubjectResource, SubjectListResource
 from .notifications import notifications
+from .users import UserResource, UserListResource
 
 __all__ = ["PostResource", "PostListResource",
            "GuidelineResource", "GuidelineListResource",
@@ -20,4 +21,6 @@ __all__ = ["PostResource", "PostListResource",
            "SiteResource", "SiteListResource",
            "SubjectResource", "SubjectListResource",
            "AuthResource",
-           "notifications", "questions"]
+           "notifications", "questions",
+           "AuthResource",
+           "UserResource", "UserListResource"]

@@ -15,6 +15,8 @@ def init_cli(app):
 def init_api(app):
     api = Api(app)
 
+    api.add_resource(res.AuthResource, "/api/authenticate")
+
     api.add_resource(res.PostResource, "/api/posts/<int:id>")
     api.add_resource(res.PostListResource, "/api/posts")
     api.add_resource(res.GuidelineResource, "/api/guidelines/<int:id>")
@@ -41,6 +43,9 @@ def init_api(app):
 
     api.add_resource(res.SiteResource, "/api/sites/<int:id>")
     api.add_resource(res.SiteListResource, "/api/sites")
+
+    api.add_resource(res.UserResource, "/api/users/<int:id>")
+    api.add_resource(res.UserListResource, "/api/users")
 
     app.register_blueprint(res.questions, url_prefix="/api/questions")
     app.register_blueprint(res.notifications, url_prefix="/api/notifications")
@@ -75,8 +80,6 @@ def create_app(test_config=None):
 
     # Register api routes
     init_api(app)
-
-    api.add_resource(res.AuthResource, "/api/authenticate")
 
     @app.route("/")
     def hello():
