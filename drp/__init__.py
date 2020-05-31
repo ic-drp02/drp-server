@@ -8,6 +8,7 @@ from .swag import swag
 
 def create_app(test_config=None):
     app = Flask(__name__)
+    app.config['UPLOAD_FOLDER'] = '../uploads'
 
     # Load configuration
     app.config["SQLALCHEMY_DATABASE_URI"] = config.DATABASE_URI
@@ -36,6 +37,11 @@ def create_app(test_config=None):
 
     api.add_resource(res.TagResource, "/api/tags/<int:id>")
     api.add_resource(res.TagListResource, "/api/tags")
+
+    api.add_resource(res.FileResource, '/api/files/<int:id>')
+    api.add_resource(res.FileListResource, "/api/files")
+
+    api.add_resource(res.RawFileResource, '/api/rawfiles/<int:id>')
 
     @app.route("/")
     def hello():
