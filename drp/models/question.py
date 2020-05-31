@@ -1,0 +1,39 @@
+from sqlalchemy.orm import relationship
+
+from ..db import db
+
+
+class Site(db.Model):
+    __tablename__ = "sites"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.Text, unique=True, nullable=False)
+
+    def __repr__(self):
+        return f"<Site '{self.name}'>"
+
+
+class Subject(db.Model):
+    __tablename__ = "subjects"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.Text, unique=True, nullable=False)
+
+    def __repr__(self):
+        return f"<Subject '{self.name}''>"
+
+
+class Question(db.Model):
+    __tablename__ = "questions"
+
+    id = db.Column(db.Integer, primary_key=True)
+    site_id = db.Column(db.Integer, db.ForeignKey("sites.id"))
+    specialty = db.Column(db.Text)
+    subject_id = db.Column(db.Integer, db.ForeignKey("subjects.id"))
+    text = db.Column(db.Text)
+
+    site = relationship("Site")
+    subject = relationship("Subject")
+
+    def __repr__(self):
+        return f"<Question '{self.text}'>"
