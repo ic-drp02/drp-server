@@ -20,7 +20,7 @@ def test_get_all_posts(app, db):
                            for i in range(0, count)])
 
     with app.test_client() as client:
-        response = client.get("/posts")
+        response = client.get("/api/posts")
 
         assert "200" in response.status
 
@@ -42,7 +42,7 @@ def test_create_post(app, db):
             "content": "A few paragraphs of content..."
         }
 
-        response = client.post("/posts", json=post)
+        response = client.post("/api/posts", json=post)
 
         assert "200" in response.status
 
@@ -63,7 +63,7 @@ def test_create_post_with_no_summary(app, db):
             "content": "A few paragraphs of content..."
         }
 
-        response = client.post("/posts", json=post)
+        response = client.post("/api/posts", json=post)
 
         assert "200" in response.status
 
@@ -98,7 +98,7 @@ def test_create_post_with_tags(app, db):
             "tags": ["Tag 1", "Tag 2"]
         }
 
-        response = client.post("/posts", json=post)
+        response = client.post("/api/posts", json=post)
 
         assert "200" in response.status
 
@@ -124,7 +124,7 @@ def test_create_post_with_missing_title(app, db):
             "content": "A few paragraphs of content..."
         }
 
-        response = client.post("/posts", json=post)
+        response = client.post("/api/posts", json=post)
 
         assert "400" in response.status
 
@@ -135,7 +135,7 @@ def test_create_post_with_missing_content(app, db):
             "title": "A title",
         }
 
-        response = client.post("/posts", json=post)
+        response = client.post("/api/posts", json=post)
 
         assert "400" in response.status
 
@@ -152,7 +152,7 @@ def test_get_single_post(app, db):
         id = post.id
 
     with app.test_client() as client:
-        response = client.get(f"/posts/{id}")
+        response = client.get(f"/api/posts/{id}")
 
         assert "200" in response.status
 
@@ -181,7 +181,7 @@ def test_delete_post(app, db):
         id = post.id
 
     with app.test_client() as client:
-        response = client.delete(f"/posts/{id}")
+        response = client.delete(f"/api/posts/{id}")
         assert "204" in response.status
 
     with app.app_context():
@@ -200,7 +200,7 @@ def test_delete_single_post_that_doesnt_exist(app, db):
         id = post.id
 
     with app.test_client() as client:
-        response = client.delete(f"/posts/{id + 1}")
+        response = client.delete(f"/api/posts/{id + 1}")
         assert "404" in response.status
 
     with app.app_context():
@@ -223,7 +223,7 @@ def test_timezone_utc(app, db):
         id = post.id
 
     with app.test_client() as client:
-        response = client.get(f"/posts/{id}")
+        response = client.get(f"/api/posts/{id}")
 
         assert "200" in response.status
 

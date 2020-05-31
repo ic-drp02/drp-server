@@ -31,11 +31,11 @@ def create_app(test_config=None):
     # Register api routes
     api = Api(app)
 
-    api.add_resource(res.PostResource, "/posts/<int:id>")
-    api.add_resource(res.PostListResource, "/posts")
+    api.add_resource(res.PostResource, "/api/posts/<int:id>")
+    api.add_resource(res.PostListResource, "/api/posts")
 
-    api.add_resource(res.TagResource, "/tags/<int:id>")
-    api.add_resource(res.TagListResource, "/tags")
+    api.add_resource(res.TagResource, "/api/tags/<int:id>")
+    api.add_resource(res.TagListResource, "/api/tags")
 
     @app.route("/")
     def hello():

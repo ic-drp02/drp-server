@@ -7,7 +7,7 @@ def test_create_tag(app, db):
     with app.test_client() as client:
         tag = {"name": "Tag 1"}
 
-        response = client.post("/tags", json=tag)
+        response = client.post("/api/tags", json=tag)
 
         assert "200" in response.status
 
@@ -26,7 +26,7 @@ def test_get_all_tags(app, db):
         db.session.commit()
 
     with app.test_client() as client:
-        response = client.get("/tags")
+        response = client.get("/api/tags")
 
         assert "200" in response.status
 
@@ -48,7 +48,7 @@ def test_delete_tag(app, db):
         id = tag.id
 
     with app.test_client() as client:
-        response = client.delete(f"/tags/{id + 1}")
+        response = client.delete(f"/api/tags/{id + 1}")
         assert "404" in response.status
 
     with app.app_context():
@@ -65,7 +65,7 @@ def test_delete_tag_that_doesnt_exist(app, db):
         id = tag.id
 
     with app.test_client() as client:
-        response = client.delete(f"/tags/{id}")
+        response = client.delete(f"/api/tags/{id}")
         assert "204" in response.status
 
     with app.app_context():
