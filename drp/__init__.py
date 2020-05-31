@@ -46,7 +46,16 @@ def create_app(test_config=None):
     api.add_resource(res.RawFileDownloadResource,
                      '/api/rawfiles/download/<int:id>')
 
-    @ app.route("/")
+    api.add_resource(res.SubjectResource, "/api/questions/subjects/<int:id>")
+    api.add_resource(res.SubjectListResource, "/api/questions/subjects")
+
+    api.add_resource(res.QuestionResource, "/api/questions/<int:id>")
+    api.add_resource(res.QuestionListResource, "/api/questions")
+
+    api.add_resource(res.SiteResource, "/api/sites/<int:id>")
+    api.add_resource(res.SiteListResource, "/api/sites")
+
+    @app.route("/")
     def hello():
         name = request.args.get("name", "World")
         return f"Hello, {escape(name)}!"
