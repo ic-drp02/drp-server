@@ -37,6 +37,8 @@ def create_app(test_config=None):
     api.add_resource(res.TagResource, "/api/tags/<int:id>")
     api.add_resource(res.TagListResource, "/api/tags")
 
+    api.add_resource(res.AuthResource, "/api/authenticate")
+
     @app.route("/")
     def hello():
         name = request.args.get("name", "World")
