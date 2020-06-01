@@ -21,10 +21,12 @@ def seed(filename, drop_all):
         db.drop_all()
         flask_migrate.upgrade(revision="head")
 
-    if tags := data.get("tags"):
+    tags = data.get("tags")
+    if tags:
         db.session.add_all([Tag(name=tag) for tag in tags])
 
-    if posts := data.get("posts"):
+    posts = data.get("posts")
+    if posts:
         def create_post(post):
             tags = []
             if "tags" in post:
