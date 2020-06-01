@@ -93,6 +93,20 @@ By default if this environment variable is not set, the database from above is u
 
 > :warning: **Running the tests will delete all data in the database!**
 
+## Adding and modifying database models
+
+The database schema is managed through migrations, which are basically python scripts that perform some update to the schema.
+To add a new model, add it to the drp/models folder and make sure that it is exported in [drp/models/\_\_init\_\_.py](drp/models/__init__.py).
+Then run:
+
+```sh
+> flask db migrate -m "A message describing the migration..."
+```
+
+This will generate a migration in the migrations/versions folder.
+You should always double check this file to make sure it does what you want it to,
+and you should probably run flake8 to format it so that the ci doesn't complain.
+
 ## Code style
 
 I've set up flake8 for linting in the CI pipeline. In vscode, you can set the default linter to flake8 in the settings. I'm also using autopep8 locally in vscode for auto formatting. In PyCharm there's probably some way to setup linting and formatting but since I don't have it locally you'll have to play around with it. Lmk if it gets too annoying and we can maybe adjust stuff.
