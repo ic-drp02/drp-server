@@ -1,7 +1,9 @@
 from .posts import PostResource, PostListResource
 from .tags import TagListResource, TagResource
-from .files import FileResource, FileListResource, RawFileResource
+from .files import (FileResource, FileListResource, RawFileViewResource,
+                    RawFileDownloadResource)
 
 __all__ = ["PostResource", "PostListResource",
            "TagResource", "TagListResource",
-           "FileResource", "FileListResource", "RawFileResource"]
+           "FileResource", "FileListResource",
+           "RawFileViewResource", "RawFileDownloadResource"]

@@ -13,16 +13,7 @@ from ..models import Post, Tag, File
 from ..swag import swag
 
 from .tags import serialize_tag
-from .files import serialize_file
-
-ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'doc', 'docx',
-                      'xls', 'xlsx', 'ppt', 'pptx', 'ods', 'fods', 'ods',
-                      'fods', 'odp', 'fodp', 'md'}
-
-
-def allowed_file(filename):
-    return '.' in filename \
-        and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+from .files import serialize_file, allowed_file
 
 
 @swag.definition("Post")
@@ -214,7 +205,8 @@ class PostListResource(Resource):
             if len(name) > 200:
                 return abort(400, message=error_message("file name", 200))
 
-            if not allowed_file(name):
+            if not allowed_file(name,
+                                current_app.config["ALLOWED_FILE_EXTENSIONS"]):
                 return abort(400, message=f"The file extension of {name} is "
                              " not allowed for security reasons. If "
                              "you believe that this file type is safe "

@@ -8,14 +8,10 @@ from ..db import db
 from ..models import File, Post
 from ..swag import swag
 
-ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'doc', 'docx',
-                      'xls', 'xlsx', 'ppt', 'pptx', 'ods', 'fods', 'ods',
-                      'fods', 'odp', 'fodp', 'md'}
 
-
-def allowed_file(filename):
+def allowed_file(filename, allowed):
     return '.' in filename \
-        and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+        and filename.rsplit('.', 1)[1].lower() in allowed
 
 
 @swag.definition("File")
@@ -39,6 +35,25 @@ def serialize_file(file):
 
 
 class FileResource(Resource):
+
+    def get(self, id):
+        """
+        Gets a single file by id.
+        ---
+        parameters:
+          - name: id
+            in: path
+            type: integer
+            required: true
+        responses:
+          200:
+            schema:
+              $ref: "#/definitions/File"
+          404:
+            description: Not found
+        """
+        file = File.query.filter(File.id == id).one_or_none()
+        return serialize_file(file) if file is not None else abort(404)
 
     def delete(self, id):
         """
@@ -123,7 +138,8 @@ class FileListResource(Resource):
         if file_content == "":
             return abort(400, message="A valid file is required.")
 
-        if not allowed_file(name):
+        if not allowed_file(name,
+                            current_app.config['ALLOWED_FILE_EXTENSIONS']):
             return abort(400, message="Unsupported file type.")
 
         post = Post.query.filter(Post.id == post_id).one_or_none()
@@ -149,11 +165,11 @@ class FileListResource(Resource):
         return serialize_file(file)
 
 
-class RawFileResource(Resource):
+class RawFileViewResource(Resource):
 
     def get(self, id):
         """
-        Retrieves a single raw file.
+        Retrieves a single raw file for viewing.
         ---
         parameters:
           - name: id
@@ -168,8 +184,47 @@ class RawFileResource(Resource):
         """
         file = File.query.filter(File.id == id).one_or_none()
 
+        print("File:")
+        print(file)
+
         if file is None:
             return abort(404)
 
+        print(file.filename)
+        print(current_app.config['UPLOAD_FOLDER'])
+
         return send_from_directory(current_app.config['UPLOAD_FOLDER'],
                                    file.filename)
+
+
+class RawFileDownloadResource(Resource):
+
+    def get(self, id):
+        """
+        Retrieves a single raw file for download.
+        ---
+        parameters:
+          - name: id
+            in: path
+            type: integer
+            required: true
+        responses:
+          204:
+            description: Success
+          404:
+            description: Not found
+        """
+        file = File.query.filter(File.id == id).one_or_none()
+
+        print("File:")
+        print(file)
+
+        if file is None:
+            return abort(404)
+
+        print(file.filename)
+        print(current_app.config['UPLOAD_FOLDER'])
+
+        return send_from_directory(current_app.config['UPLOAD_FOLDER'],
+                                   file.filename, as_attachment=True,
+                                   attachment_filename=file.name)
