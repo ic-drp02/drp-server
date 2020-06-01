@@ -60,8 +60,12 @@ def test_create_question(app, db):
         "site": "Site 1",
         "grade": "core_trainee",
         "specialty": "Specialty 1",
-        "subject": "Subject 1",
-        "text": "An example question"
+        "questions": [
+            {
+                "subject": "Subject 1",
+                "text": "An example question"
+            }
+        ]
     }
 
     with app.test_client() as client:
@@ -71,11 +75,14 @@ def test_create_question(app, db):
 
         data = json.loads(response.data.decode("utf-8"))
 
-        assert data["site"]["name"] == question["site"]
-        assert data["grade"] == question["grade"]
-        assert data["specialty"] == question["specialty"]
-        assert data["subject"]["name"] == question["subject"]
-        assert data["text"] == question["text"]
+        assert len(data) == 1
+
+        assert data[0]["site"]["name"] == question["site"]
+        assert data[0]["grade"] == question["grade"]
+        assert data[0]["specialty"] == question["specialty"]
+        assert data[0]["subject"]["name"] == \
+            question["questions"][0]["subject"]
+        assert data[0]["text"] == question["questions"][0]["text"]
 
 
 def test_delete_question(app, db):

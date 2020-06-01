@@ -116,7 +116,7 @@ class QuestionListResource(Resource):
 
     def post(self):
         """
-        Creates a new question.
+        Creates one or more new questions.
         ---
         parameters:
           - in: body
@@ -140,17 +140,25 @@ class QuestionListResource(Resource):
                 specialty:
                   type: string
                   required: true
-                subject:
-                  type: string
+                questions:
+                  type: array
                   required: true
-                text:
-                  type: string
-                  required: true
+                  items:
+                    type: object
+                    properties:
+                      subject:
+                        type: string
+                        required: true
+                      text:
+                        type: string
+                        required: true
         responses:
           200:
             description: Success
             schema:
-              $ref: "#/definitions/Question"
+              type: array
+              items:
+                $ref: "#/definitions/Question"
           400:
             description: Invalid request
         """
@@ -159,8 +167,7 @@ class QuestionListResource(Resource):
         site = body.get("site")
         grade = body.get("grade")
         specialty = body.get("specialty")
-        subject = body.get("subject")
-        text = body.get("text")
+        questions = body.get("questions")
 
         if site is None or site == "":
             return abort(400, message="Site is required.")
@@ -171,27 +178,39 @@ class QuestionListResource(Resource):
         if specialty is None or specialty == "":
             return abort(400, message="Specialty is required.")
 
-        if subject is None or subject == "":
-            return abort(400, message="Subject is required.")
-
-        if text is None or text == "":
-            return abort(400, message="Text is required.")
+        if questions is None or questions == []:
+            return abort(400, message="At least one question must be given.")
 
         site = Site.query.filter(Site.name == site).one_or_none()
 
         if site is None:
             return abort(400, message="Site does not exist.")
 
-        subject = Subject.query.filter(Subject.name == subject).one_or_none()
+        qs = []
 
-        if subject is None:
-            return abort(400, message="Subject does not exist.")
+        for question in questions:
+            subject = question.get("subject")
+            text = question.get("text")
 
-        question = Question(site=site, grade=Grade[grade.upper()],
-                            specialty=specialty,
-                            subject=subject, text=text)
+            if subject is None or subject == "":
+                return abort(400, message="Text is required.")
 
-        db.session.add(question)
+            if text is None or text == "":
+                return abort(400, message="Text is required.")
+
+            subject = Subject.query.filter(
+                Subject.name == subject).one_or_none()
+
+            if subject is None:
+                return abort(400, message="Subject does not exist.")
+
+            question = Question(site=site, grade=Grade[grade.upper()],
+                                specialty=specialty,
+                                subject=subject, text=text)
+
+            db.session.add(question)
+            qs.append(question)
+
         db.session.commit()
 
-        return serialize_question(question)
+        return [serialize_question(q) for q in qs]
