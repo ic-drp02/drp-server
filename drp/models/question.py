@@ -1,6 +1,17 @@
+from enum import Enum
+
 from sqlalchemy.orm import relationship
 
 from ..db import db
+
+
+class Grade(Enum):
+    CONSULTANT = 1
+    SPR = 2
+    CORE_TRAINEE = 3
+    FY2 = 4
+    FY1 = 5
+    FIY1 = 6
 
 
 class Site(db.Model):
@@ -28,6 +39,7 @@ class Question(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     site_id = db.Column(db.Integer, db.ForeignKey("sites.id"))
+    grade = db.Column(db.Enum(Grade))
     specialty = db.Column(db.Text)
     subject_id = db.Column(db.Integer, db.ForeignKey("subjects.id"))
     text = db.Column(db.Text)

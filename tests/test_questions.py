@@ -1,6 +1,6 @@
 import json
 
-from drp.models import Question, Site, Subject
+from drp.models import Question, Site, Subject, Grade
 
 
 def test_get_all_questions(app, db):
@@ -12,11 +12,13 @@ def test_get_all_questions(app, db):
         db.session.add(subject)
 
         db.session.add(Question(site=site,
+                                grade=Grade.CONSULTANT,
                                 specialty="Specialty 1",
                                 subject=subject,
                                 text="An example question..."))
 
         db.session.add(Question(site=site,
+                                grade=Grade.FY1,
                                 specialty="Specialty 2",
                                 subject=subject,
                                 text="Another question..."))
@@ -33,11 +35,13 @@ def test_get_all_questions(app, db):
         assert len(data) == 2
 
         assert data[0]["site"]["name"] == "Site 1"
+        assert data[0]["grade"] == "consultant"
         assert data[0]["specialty"] == "Specialty 1"
         assert data[0]["subject"]["name"] == "Subject 1"
         assert data[0]["text"] == "An example question..."
 
         assert data[1]["site"]["name"] == "Site 1"
+        assert data[1]["grade"] == "fy1"
         assert data[1]["specialty"] == "Specialty 2"
         assert data[1]["subject"]["name"] == "Subject 1"
         assert data[1]["text"] == "Another question..."
@@ -54,6 +58,7 @@ def test_create_question(app, db):
 
     question = {
         "site": "Site 1",
+        "grade": "core_trainee",
         "specialty": "Specialty 1",
         "subject": "Subject 1",
         "text": "An example question"
@@ -67,6 +72,7 @@ def test_create_question(app, db):
         data = json.loads(response.data.decode("utf-8"))
 
         assert data["site"]["name"] == question["site"]
+        assert data["grade"] == question["grade"]
         assert data["specialty"] == question["specialty"]
         assert data["subject"]["name"] == question["subject"]
         assert data["text"] == question["text"]
@@ -78,6 +84,7 @@ def test_delete_question(app, db):
         subject = Subject(name="Subject 1")
 
         question = Question(site=site,
+                            grade=Grade.FY2,
                             specialty="Specialty 1",
                             subject=subject,
                             text="An example question...")

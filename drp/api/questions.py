@@ -2,7 +2,7 @@ from flask import request
 from flask_restful import Resource, abort
 
 from ..db import db
-from ..models import Question, Site, Subject
+from ..models import Question, Site, Subject, Grade
 from ..swag import swag
 
 from .site import serialize_site
@@ -19,6 +19,15 @@ def serialize_question(question):
         type: integer
       site:
         $ref: "#/definitions/Site"
+      grade:
+        type: string
+        enum:
+          - consultant
+          - spr
+          - core_trainee
+          - fy2
+          - fy1
+          - fiy1
       specialty:
         type: string
       subject:
@@ -29,6 +38,7 @@ def serialize_question(question):
     return {
         "id": question.id,
         "site": serialize_site(question.site),
+        "grade": question.grade.name.lower(),
         "specialty": question.specialty,
         "subject": serialize_subject(question.subject),
         "text": question.text
@@ -117,6 +127,16 @@ class QuestionListResource(Resource):
                 site:
                   type: string
                   required: true
+                grade:
+                  type: string
+                  enum:
+                    - consultant
+                    - spr
+                    - core_trainee
+                    - fy2
+                    - fy1
+                    - fiy1
+                  required: true
                 specialty:
                   type: string
                   required: true
@@ -137,12 +157,16 @@ class QuestionListResource(Resource):
         body = request.json
 
         site = body.get("site")
+        grade = body.get("grade")
         specialty = body.get("specialty")
         subject = body.get("subject")
         text = body.get("text")
 
         if site is None or site == "":
             return abort(400, message="Site is required.")
+
+        if grade is None or grade == "":
+            return abort(400, message="Grade is required.")
 
         if specialty is None or specialty == "":
             return abort(400, message="Specialty is required.")
@@ -163,7 +187,8 @@ class QuestionListResource(Resource):
         if subject is None:
             return abort(400, message="Subject does not exist.")
 
-        question = Question(site=site, specialty=specialty,
+        question = Question(site=site, grade=Grade[grade.upper()],
+                            specialty=specialty,
                             subject=subject, text=text)
 
         db.session.add(question)

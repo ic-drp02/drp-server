@@ -1,8 +1,8 @@
 """Add questions table
 
-Revision ID: ea8d32c2ff5a
+Revision ID: 7ac801eafaa6
 Revises: 359ca2cf281a
-Create Date: 2020-05-31 22:25:04.154514
+Create Date: 2020-06-01 18:42:35.708323
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'ea8d32c2ff5a'
+revision = '7ac801eafaa6'
 down_revision = '359ca2cf281a'
 branch_labels = None
 depends_on = None
@@ -33,6 +33,10 @@ def upgrade():
     op.create_table('questions',
                     sa.Column('id', sa.Integer(), nullable=False),
                     sa.Column('site_id', sa.Integer(), nullable=True),
+                    sa.Column('grade', sa.Enum('CONSULTANT', 'SPR',
+                                               'CORE_TRAINEE', 'FY2', 'FY1',
+                                               'FIY1', name='grade'),
+                              nullable=True),
                     sa.Column('specialty', sa.Text(), nullable=True),
                     sa.Column('subject_id', sa.Integer(), nullable=True),
                     sa.Column('text', sa.Text(), nullable=True),
