@@ -1,0 +1,16 @@
+{
+  "tags": ["COVID-19", "Guideline", "Wellbeing"],
+  "posts": [
+    {
+      "title": "A title",
+      "summary": "A short summary",
+      "content": "A few lines of content...",
+      "tags": ["COVID-19", "Guideline"]
+    },
+    {
+      "title": "No tags",
+      "summary": "A post without tags",
+      "content": "This is an example of a post without any tags."
+    }
+  ]
+}
