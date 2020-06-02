@@ -5,8 +5,6 @@ from . import config, api as res
 from .db import db
 from .swag import swag
 
-import os
-
 
 def create_app(test_config=None):
     app = Flask(__name__)
