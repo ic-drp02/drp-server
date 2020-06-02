@@ -125,9 +125,9 @@ class FileListResource(Resource):
             schema:
               $ref: "#/definitions/File"
         """
-        file_content = request.files['file']
-        name = request.form['name']
-        post_id = request.form['post']
+        file_content = request.files.get('file')
+        name = request.form.get('name')
+        post_id = request.form.get('post')
 
         if name is None:
             return abort(400, message="`name` field is required.")
@@ -140,7 +140,10 @@ class FileListResource(Resource):
 
         if not allowed_file(name,
                             current_app.config['ALLOWED_FILE_EXTENSIONS']):
-            return abort(400, message="Unsupported file type.")
+            return abort(400, message=f"The file extension of {name} is "
+                         "not allowed for security reasons. If "
+                         "you believe that this file type is safe "
+                         "to upload, contact the developer.")
 
         post = Post.query.filter(Post.id == post_id).one_or_none()
         if post is None:
@@ -157,7 +160,7 @@ class FileListResource(Resource):
                          "please try again later")
         file_content.save(path)
 
-        file = File(name=name, filename=filename, post_id=int(post_id))
+        file = File(name=name, filename=filename, post=post)
 
         db.session.add(file)
         db.session.commit()

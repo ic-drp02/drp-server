@@ -208,7 +208,7 @@ class PostListResource(Resource):
             if not allowed_file(name,
                                 current_app.config["ALLOWED_FILE_EXTENSIONS"]):
                 return abort(400, message=f"The file extension of {name} is "
-                             " not allowed for security reasons. If "
+                             "not allowed for security reasons. If "
                              "you believe that this file type is safe "
                              "to upload, contact the developer.")
 
