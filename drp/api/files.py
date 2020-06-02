@@ -187,14 +187,8 @@ class RawFileViewResource(Resource):
         """
         file = File.query.filter(File.id == id).one_or_none()
 
-        print("File:")
-        print(file)
-
         if file is None:
             return abort(404)
-
-        print(file.filename)
-        print(current_app.config['UPLOAD_FOLDER'])
 
         return send_from_directory(current_app.config['UPLOAD_FOLDER'],
                                    file.filename)
@@ -219,14 +213,8 @@ class RawFileDownloadResource(Resource):
         """
         file = File.query.filter(File.id == id).one_or_none()
 
-        print("File:")
-        print(file)
-
         if file is None:
             return abort(404)
-
-        print(file.filename)
-        print(current_app.config['UPLOAD_FOLDER'])
 
         return send_from_directory(current_app.config['UPLOAD_FOLDER'],
                                    file.filename, as_attachment=True,
