@@ -198,20 +198,6 @@ def test_create_post_with_missing_title(app, db):
         assert "400" in response.status
 
 
-def test_create_post_with_missing_content(app, db):
-    with app.test_client() as client:
-        post = {
-            "title": "A title",
-            "summary": "A summary"
-        }
-
-        response = client.post('/api/posts',
-                               content_type='multipart/form-data',
-                               data=post)
-
-        assert "400" in response.status
-
-
 def test_create_post_with_bad_file_type(app, db):
 
     with app.test_client() as client:
