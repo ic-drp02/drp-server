@@ -12,5 +12,38 @@
       "summary": "A post without tags",
       "content": "This is an example of a post without any tags."
     }
+  ],
+  "sites": [
+    "St Mary's",
+    "Charing Cross",
+    "Hammersmith Hospital",
+    "Western Eye",
+    "Queen Charlotte's"
+  ],
+  "questionSubjects": [
+    "Patient Management",
+    "Training Needs",
+    "Welfare Needs",
+    "Communications",
+    "Safety",
+    "Rota",
+    "Redeployment",
+    "Other"
+  ],
+  "questions": [
+    {
+      "site": "Charing Cross",
+      "grade": "fy2",
+      "specialty": "Emergency medicine",
+      "subject": "Welfare Needs",
+      "text": "This is a question..."
+    },
+    {
+      "site": "St Mary's",
+      "grade": "core_trainee",
+      "specialty": "Anaesthetics",
+      "subject": "Training Needs",
+      "text": "This is another question..."
+    }
   ]
 }

@@ -4,7 +4,7 @@ import flask_migrate
 from flask.cli import with_appcontext
 
 from .db import db
-from .models import Tag, Post
+from .models import Tag, Post, Site, Subject, Grade, Question
 
 
 @click.command("seed", help="Seed the database with data from a json file.")
@@ -37,5 +37,27 @@ def seed(filename, drop_all):
 
         posts = map(create_post, posts)
         db.session.add_all(posts)
+
+    sites = data.get("sites")
+    if sites:
+        db.session.add_all([Site(name=site) for site in sites])
+
+    subjects = data.get("questionSubjects")
+    if subjects:
+        db.session.add_all([Subject(name=subject) for subject in subjects])
+
+    questions = data.get("questions")
+    if questions:
+        def create_question(question):
+            site = Site.query.filter(Site.name == question.get("site")).one()
+            grade = Grade[question.get("grade").upper()]
+            subject = Subject.query.filter(
+                Subject.name == question.get("subject")).one()
+            return Question(site=site, grade=grade,
+                            specialty=question.get("specialty"),
+                            subject=subject, text=question.get("text"))
+
+        questions = map(create_question, questions)
+        db.session.add_all(questions)
 
     db.session.commit()
