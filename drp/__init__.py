@@ -10,18 +10,13 @@ import os
 
 def create_app(test_config=None):
     app = Flask(__name__)
-    app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(
-        app.root_path), "uploads")
-    app.config['ALLOWED_FILE_EXTENSIONS'] = {'txt', 'pdf', 'png', 'jpg',
-                                             'jpeg', 'gif', 'doc', 'docx',
-                                             'xls', 'xlsx', 'ppt', 'pptx',
-                                             'ods', 'fods', 'ods', 'fods',
-                                             'odp', 'fodp', 'md'}
 
     # Load configuration
     app.config["SQLALCHEMY_DATABASE_URI"] = config.DATABASE_URI
     app.config["SQLALCHEMY_ECHO"] = config.IS_DEV_ENV
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    app.config["UPLOAD_FOLDER"] = config.UPLOAD_FOLDER
+    app.config["ALLOWED_FILE_EXTENSIONS"] = config.ALLOWED_FILE_EXTENSIONS
 
     if test_config is not None:
         app.config.update(test_config)
