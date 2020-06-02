@@ -104,8 +104,32 @@ Then run:
 ```
 
 This will generate a migration in the migrations/versions folder.
-You should always double check this file to make sure it does what you want it to,
-and you should probably run flake8 to format it so that the ci doesn't complain.
+You should always double check this file to make sure it does what you want it to.
+In particular, the flask db migrate command cannot reliably detect changes of table or column names.
+You should probably also run flake8 to format the migration so that the ci doesn't complain.
+
+To apply the upgrades to your development database from the above, run
+
+```sh
+> flask db upgrade
+```
+
+To run the migration on the production database (typically after merging changes that require alteration of the database schema), first run
+
+```sh
+> export DATABASE_URI="postgresql://[USERNAME]:[PASSWORD]@[SERVER]:[PORT]/[DATABASE_NAME]"
+```
+
+with the values of \[USERNAME\] etc. replaced for the appropriate values
+(currently those from the CSG e-mail, the database name is identical to the username).
+After double-checking that everything is set up correctly, run:
+
+```sh
+> flask db upgrade
+> unset DATABASE_URI
+```
+
+The last commands prevents accidental changes to the production database during development.
 
 ## Code style
 
