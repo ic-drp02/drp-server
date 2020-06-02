@@ -306,9 +306,6 @@ def test_delete_post(app, db):
 
 
 def test_delete_post_with_file(app, db):
-    app.config["UPLOAD_FOLDER"] = os.path.join(
-        os.path.dirname(app.root_path), "tests", "output")
-
     tests_path = os.path.join(os.path.dirname(app.root_path), "tests")
     input_path = os.path.join(tests_path, "input")
 
