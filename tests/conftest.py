@@ -5,7 +5,7 @@ from drp import create_app
 from drp.db import db as _db
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def app():
     options = {"TEST": True}
     db = os.environ.get("TEST_DATABASE_URI")
@@ -17,7 +17,7 @@ def app():
 
 
 @pytest.fixture
-def db(app):
+def db(app, db_downgrade):
     with app.app_context():
         _db.create_all()
 
@@ -25,6 +25,13 @@ def db(app):
 
     with app.app_context():
         _db.drop_all()
+
+
+@pytest.fixture(scope="session")
+def db_downgrade(app):
+    from flask_migrate import downgrade
+    with app.app_context():
+        downgrade(revision="base")
 
 
 @pytest.fixture(autouse=True)
