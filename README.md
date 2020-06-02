@@ -129,7 +129,7 @@ After double-checking that everything is set up correctly, run:
 > unset DATABASE_URI
 ```
 
-The last commands prevents accidental changes to the production database during development.
+The last command prevents accidental changes to the production database during development.
 
 ## Code style
 
