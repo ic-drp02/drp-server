@@ -1,6 +1,9 @@
 import json
+import os
+from io import BytesIO
+from hashlib import sha256
 
-from drp.models import Post, Tag
+from drp.models import Post, Tag, File
 
 
 def create_posts(app, db, posts):
@@ -42,7 +45,9 @@ def test_create_post(app, db):
             "content": "A few paragraphs of content..."
         }
 
-        response = client.post("/api/posts", json=post)
+        response = client.post('/api/posts',
+                               content_type='multipart/form-data',
+                               data=post)
 
         assert "200" in response.status
 
@@ -63,19 +68,11 @@ def test_create_post_with_no_summary(app, db):
             "content": "A few paragraphs of content..."
         }
 
-        response = client.post("/api/posts", json=post)
+        response = client.post('/api/posts',
+                               content_type='multipart/form-data',
+                               data=post)
 
-        assert "200" in response.status
-
-        data = json.loads(response.data.decode("utf-8"))
-
-        assert post["title"] == data["title"]
-        assert post["content"] == data["content"]
-
-        assert "id" in data
-        assert "created_at" in data
-
-        assert data.get("summary") is None
+        assert "400" in response.status
 
 
 def test_create_post_with_tags(app, db):
@@ -94,11 +91,14 @@ def test_create_post_with_tags(app, db):
     with app.test_client() as client:
         post = {
             "title": "A title",
+            "summary": "A summary",
             "content": "A few paragraphs of content...",
             "tags": ["Tag 1", "Tag 2"]
         }
 
-        response = client.post("/api/posts", json=post)
+        response = client.post('/api/posts',
+                               content_type='multipart/form-data',
+                               data=post)
 
         assert "200" in response.status
 
@@ -106,11 +106,10 @@ def test_create_post_with_tags(app, db):
 
         assert post["title"] == data["title"]
         assert post["content"] == data["content"]
+        assert post["summary"] == data["summary"]
 
         assert "id" in data
         assert "created_at" in data
-
-        assert data.get("summary") is None
 
         print(f"______TAGS_____: {post['tags']}")
 
@@ -118,13 +117,83 @@ def test_create_post_with_tags(app, db):
         assert {"id": id2, "name": "Tag 2"} in data["tags"]
 
 
+def test_create_post_with_files(app, db):
+
+    tests_path = os.path.join(os.path.dirname(app.root_path), "tests")
+    input_path = os.path.join(tests_path, "input")
+
+    with open(os.path.join(input_path, "Frankenstein.pdf"), 'rb') as file:
+        read = file.read()
+        file1 = BytesIO(read)
+        hash1 = sha256(read).hexdigest()
+    with open(os.path.join(input_path, "Medical.png"), 'rb') as file:
+        read = file.read()
+        file2 = BytesIO(read)
+        hash2 = sha256(read).hexdigest()
+
+    with app.test_client() as client:
+        post = {
+            "title": "A title",
+            "summary": "A summary",
+            "content": "A content",
+            "files": [(file1, "file1.pdf"), (file2, "file2.png")],
+            "names": ["name1.pdf", "name2.jpg"]
+        }
+
+        response = client.post('/api/posts',
+                               content_type='multipart/form-data',
+                               data=post)
+
+        assert "200" in response.status
+
+        data = json.loads(response.data.decode("utf-8"))
+
+        assert post["title"] == data["title"]
+        assert post["content"] == data["content"]
+        assert post["summary"] == data["summary"]
+
+        assert "id" in data
+        assert "created_at" in data
+
+        assert len(data["files"]) == 2
+
+        files = data["files"]
+
+        assert post["names"][0] == files[0]["name"]
+        assert data["id"] == files[0]["post"]
+        assert "id" in files[0]
+
+        assert post["names"][1] == files[1]["name"]
+        assert data["id"] == files[1]["post"]
+        assert "id" in files[1]
+
+        filename1 = File.query.filter(
+            File.id == files[0]["id"]).one_or_none().filename
+        filename2 = File.query.filter(
+            File.id == files[1]["id"]).one_or_none().filename
+
+        output_path = os.path.join(tests_path, "output")
+
+        file_path = os.path.join(output_path, filename1)
+        with open(file_path, 'rb') as file:
+            hash = sha256(file.read()).hexdigest()
+            assert hash1 == hash
+        file_path = os.path.join(output_path, filename2)
+        with open(file_path, 'rb') as file:
+            hash = sha256(file.read()).hexdigest()
+            assert hash2 == hash
+
+
 def test_create_post_with_missing_title(app, db):
     with app.test_client() as client:
         post = {
+            "summary": "A summary",
             "content": "A few paragraphs of content..."
         }
 
-        response = client.post("/api/posts", json=post)
+        response = client.post('/api/posts',
+                               content_type='multipart/form-data',
+                               data=post)
 
         assert "400" in response.status
 
@@ -133,11 +202,59 @@ def test_create_post_with_missing_content(app, db):
     with app.test_client() as client:
         post = {
             "title": "A title",
+            "summary": "A summary"
         }
 
-        response = client.post("/api/posts", json=post)
+        response = client.post('/api/posts',
+                               content_type='multipart/form-data',
+                               data=post)
 
         assert "400" in response.status
+
+
+def test_create_post_with_bad_file_type(app, db):
+
+    with app.test_client() as client:
+        post = {
+            "title": "A title",
+            "summary": "A summary",
+            "content": "A content",
+            "files": [(BytesIO(b"<html></html>"), 'test.html')],
+            "names": ["name1.html"]
+        }
+
+        response = client.post('/api/posts',
+                               content_type='multipart/form-data',
+                               data=post)
+
+        assert "400" in response.status
+
+        data = json.loads(response.data.decode("utf-8"))
+
+        assert "security" in data["message"]
+        assert "not allowed" in data["message"]
+
+
+def test_create_post_with_files_names_mismatch(app, db):
+
+    with app.test_client() as client:
+        post = {
+            "title": "A title",
+            "summary": "A summary",
+            "content": "A content",
+            "files": [(BytesIO(b"A test file"), 'test.pdf')],
+            "names": ["name1.pdf", "name2.png"]
+        }
+
+        response = client.post('/api/posts',
+                               content_type='multipart/form-data',
+                               data=post)
+
+        assert "400" in response.status
+
+        data = json.loads(response.data.decode("utf-8"))
+
+        assert "must match" in data["message"]
 
 
 def test_get_single_post(app, db):
@@ -186,6 +303,44 @@ def test_delete_post(app, db):
 
     with app.app_context():
         assert Post.query.count() == 0
+
+
+def test_delete_post_with_file(app, db):
+    tests_path = os.path.join(os.path.dirname(app.root_path), "tests")
+    input_path = os.path.join(tests_path, "input")
+
+    with open(os.path.join(input_path, "Frankenstein.pdf"), 'rb') as file:
+        read = file.read()
+        file_bytes = BytesIO(read)
+
+    with app.test_client() as client:
+        post = {
+            "title": "A title",
+            "summary": "A summary",
+            "content": "A content",
+            "files": [(file_bytes, "file1.pdf")],
+            "names": ["name1.pdf"]
+        }
+
+        response = client.post('/api/posts',
+                               content_type='multipart/form-data',
+                               data=post)
+
+        assert "200" in response.status
+
+        data = json.loads(response.data.decode("utf-8"))
+
+        filename = File.query.filter(
+            File.id == data["files"][0]["id"]).one_or_none().filename
+
+        file_path = os.path.join(tests_path, "output", filename)
+        assert os.path.isfile(file_path)
+
+        response = client.delete(f"/api/posts/{data['id']}")
+
+        assert "204" in response.status
+
+        assert not os.path.isfile(file_path)
 
 
 def test_delete_single_post_that_doesnt_exist(app, db):

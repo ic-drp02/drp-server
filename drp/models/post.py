@@ -17,6 +17,8 @@ class Post(db.Model):
 
     tags = relationship("Tag", secondary="post_tag")
 
+    files = relationship("File", back_populates="post")
+
     def __repr__(self):
         return f"<Post '{self.title}'>"
 
@@ -49,3 +51,18 @@ class Post_Tag(db.Model):
 
     def __repr__(self):
         return f"<Post_Tag {self.post} <-> {self.tag}>"
+
+
+class File(db.Model):
+    __tablename__ = "files"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200))
+    filename = db.Column(db.String(300))
+
+    post_id = db.Column(db.Integer,
+                        db.ForeignKey("posts.id"))
+    post = relationship('Post', back_populates='files')
+
+    def __repr__(self):
+        return f"<File '{self.name}'>"

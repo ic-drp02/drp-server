@@ -48,11 +48,11 @@ def test_delete_tag(app, db):
         id = tag.id
 
     with app.test_client() as client:
-        response = client.delete(f"/api/tags/{id + 1}")
-        assert "404" in response.status
+        response = client.delete(f"/api/tags/{id}")
+        assert "204" in response.status
 
     with app.app_context():
-        assert Tag.query.count() == 1
+        assert Tag.query.count() == 0
 
 
 def test_delete_tag_that_doesnt_exist(app, db):
@@ -65,8 +65,8 @@ def test_delete_tag_that_doesnt_exist(app, db):
         id = tag.id
 
     with app.test_client() as client:
-        response = client.delete(f"/api/tags/{id}")
-        assert "204" in response.status
+        response = client.delete(f"/api/tags/{id + 1}")
+        assert "404" in response.status
 
     with app.app_context():
-        assert Tag.query.count() == 0
+        assert Tag.query.count() == 1

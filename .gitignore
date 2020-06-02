@@ -117,3 +117,8 @@ dmypy.json
 
 # VSCode folder
 .vscode/
+
+# Uploads folder
+uploads/*
+# Except README.md
+!uploads/README.md

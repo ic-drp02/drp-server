@@ -13,6 +13,8 @@ def create_app(test_config=None):
     app.config["SQLALCHEMY_DATABASE_URI"] = config.DATABASE_URI
     app.config["SQLALCHEMY_ECHO"] = config.IS_DEV_ENV
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    app.config["UPLOAD_FOLDER"] = config.UPLOAD_FOLDER
+    app.config["ALLOWED_FILE_EXTENSIONS"] = config.ALLOWED_FILE_EXTENSIONS
 
     if test_config is not None:
         app.config.update(test_config)
@@ -37,7 +39,14 @@ def create_app(test_config=None):
     api.add_resource(res.TagResource, "/api/tags/<int:id>")
     api.add_resource(res.TagListResource, "/api/tags")
 
-    @app.route("/")
+    api.add_resource(res.FileResource, '/api/files/<int:id>')
+    api.add_resource(res.FileListResource, "/api/files")
+
+    api.add_resource(res.RawFileViewResource, '/api/rawfiles/view/<int:id>')
+    api.add_resource(res.RawFileDownloadResource,
+                     '/api/rawfiles/download/<int:id>')
+
+    @ app.route("/")
     def hello():
         name = request.args.get("name", "World")
         return f"Hello, {escape(name)}!"
