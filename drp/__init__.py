@@ -5,10 +5,13 @@ from . import config, api as res
 from .db import db
 from .swag import swag
 
+import os
+
 
 def create_app(test_config=None):
     app = Flask(__name__)
-    app.config['UPLOAD_FOLDER'] = '/home/adam/Dokumenty/uploads'
+    app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(
+        app.root_path), "uploads")
     app.config['ALLOWED_FILE_EXTENSIONS'] = {'txt', 'pdf', 'png', 'jpg',
                                              'jpeg', 'gif', 'doc', 'docx',
                                              'xls', 'xlsx', 'ppt', 'pptx',
@@ -50,7 +53,7 @@ def create_app(test_config=None):
     api.add_resource(res.RawFileDownloadResource,
                      '/api/rawfiles/download/<int:id>')
 
-    @app.route("/")
+    @ app.route("/")
     def hello():
         name = request.args.get("name", "World")
         return f"Hello, {escape(name)}!"
