@@ -47,6 +47,9 @@ class SiteResource(Resource):
         if site is None:
             return abort(404)
 
+        db.session.delete(site)
+        db.session.commit()
+
         return "", 204
 
 

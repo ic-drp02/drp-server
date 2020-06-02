@@ -47,6 +47,9 @@ class SubjectResource(Resource):
         if subject is None:
             return abort(404)
 
+        db.session.delete(subject)
+        db.session.commit()
+
         return "", 204
 
 
