@@ -61,6 +61,28 @@ def test_create_post(app, db):
         assert "created_at" in data
 
 
+def test_create_post_with_no_content(app, db):
+    with app.test_client() as client:
+        post = {
+            "title": "A title",
+            "summary": "A short summary",
+        }
+
+        response = client.post("/api/posts", json=post)
+
+        assert "200" in response.status
+
+        data = json.loads(response.data.decode("utf-8"))
+
+        assert post["title"] == data["title"]
+        assert post["summary"] == data["summary"]
+
+        assert "id" in data
+        assert "created_at" in data
+
+        assert data.get("content") is None
+
+
 def test_create_post_with_no_summary(app, db):
     with app.test_client() as client:
         post = {
