@@ -68,7 +68,9 @@ def test_create_post_with_no_content(app, db):
             "summary": "A short summary",
         }
 
-        response = client.post("/api/posts", json=post)
+        response = client.post("/api/posts",
+                               content_type='multipart/form-data',
+                               data=post)
 
         assert "200" in response.status
 
@@ -94,7 +96,17 @@ def test_create_post_with_no_summary(app, db):
                                content_type='multipart/form-data',
                                data=post)
 
-        assert "400" in response.status
+        assert "200" in response.status
+
+        data = json.loads(response.data.decode("utf-8"))
+
+        assert post["title"] == data["title"]
+        assert post["content"] == data["content"]
+
+        assert "id" in data
+        assert "created_at" in data
+
+        assert data.get("summary") is None
 
 
 def test_create_post_with_tags(app, db):
