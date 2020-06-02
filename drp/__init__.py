@@ -6,31 +6,13 @@ from .db import db
 from .swag import swag
 
 
-def create_app(test_config=None):
-    app = Flask(__name__)
+def init_cli(app):
+    from . import cli
+    with app.app_context():
+        app.cli.add_command(cli.seed)
 
-    # Load configuration
-    app.config["SQLALCHEMY_DATABASE_URI"] = config.DATABASE_URI
-    app.config["SQLALCHEMY_ECHO"] = config.IS_DEV_ENV
-    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-    app.config["UPLOAD_FOLDER"] = config.UPLOAD_FOLDER
-    app.config["ALLOWED_FILE_EXTENSIONS"] = config.ALLOWED_FILE_EXTENSIONS
 
-    if test_config is not None:
-        app.config.update(test_config)
-
-    # Register app with database
-    db.init_app(app)
-
-    # Run database migrations
-    # with app.app_context():
-    #     import flask_migrate
-    #     flask_migrate.upgrade()
-
-    # Initialise flasggr
-    swag.init_app(app)
-
-    # Register api routes
+def init_api(app):
     api = Api(app)
 
     api.add_resource(res.PostResource, "/api/posts/<int:id>")
@@ -54,6 +36,37 @@ def create_app(test_config=None):
 
     api.add_resource(res.SiteResource, "/api/sites/<int:id>")
     api.add_resource(res.SiteListResource, "/api/sites")
+
+
+def create_app(test_config=None):
+    app = Flask(__name__)
+
+    # Load configuration
+    app.config["SQLALCHEMY_DATABASE_URI"] = config.DATABASE_URI
+    app.config["SQLALCHEMY_ECHO"] = config.IS_DEV_ENV
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    app.config["UPLOAD_FOLDER"] = config.UPLOAD_FOLDER
+    app.config["ALLOWED_FILE_EXTENSIONS"] = config.ALLOWED_FILE_EXTENSIONS
+
+    if test_config is not None:
+        app.config.update(test_config)
+
+    # Register app with database
+    db.init_app(app)
+
+    # Run database migrations
+    # with app.app_context():
+    #     import flask_migrate
+    #     flask_migrate.upgrade()
+
+    # Register cli commands
+    init_cli(app)
+
+    # Initialise flasggr
+    swag.init_app(app)
+
+    # Register api routes
+    init_api(app)
 
     @app.route("/")
     def hello():

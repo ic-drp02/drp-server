@@ -12,6 +12,19 @@ This will run the application in _roughly_ the same environment as production (i
 The server runs on port 8000 and the database is on port 5432.
 If you are working on the server itself, you probably want to use development mode. See below for instructions.
 
+## Seeding the database
+
+You can populate the database with test data from a json file. This is done by running the following command:
+
+```sh
+> flask seed [filename].json
+```
+
+You can optionally pass the `--drop-all` flag which will drop all existing data in the database and
+recreate the tables before populating them with data.
+
+There is an example json file [in this repo](seed_data.json). It would be helpful if we keep this up to date with useful seed data.
+
 ## Tips for local development
 
 This isn't strictly neccessary but you probably want to install the dependencies in a python virtual environment to avoid conflicts.
