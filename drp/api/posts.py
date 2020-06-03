@@ -198,7 +198,7 @@ class PostListResource(Resource):
         tags = tags.all() if tags is not None else []
 
         if len(files) != len(names):
-            return abort(400, message="The number of files must match"
+            return abort(400, message="The number of files must match "
                          "the number of supplied names.")
 
         for name in names:
