@@ -241,3 +241,45 @@ class PostListResource(Resource):
         db.session.commit()
 
         return serialize_post(post)
+
+
+class PostStatsResource(Resource):
+
+    def get(self, id):
+        post = Post.query.filter(Post.id == id).one_or_none()
+
+        if post is None:
+            return abort(404)
+
+        return {
+            "views": post.views,
+            "votes": post.votes,
+        }
+
+    def post(self, id):
+        post = Post.query.filter(Post.id == id).one_or_none()
+
+        if post is None:
+            return abort(404)
+
+        body = request.json
+
+        views = body.get("views")
+        votes = body.get("votes")
+
+        if views is not None:
+            if not isinstance(views, int):
+                return abort(400, message="`views` must be an integer")
+            post.views = views
+
+        if votes is not None:
+            if not isinstance(views, int):
+                return abort(400, message="`views` must be an integer")
+            post.votes = votes
+
+        db.session.commit()
+
+        return {
+            "views": post.views,
+            "votes": post.votes,
+        }
