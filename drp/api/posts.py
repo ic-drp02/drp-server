@@ -273,8 +273,8 @@ class PostStatsResource(Resource):
             post.views = views
 
         if votes is not None:
-            if not isinstance(views, int):
-                return abort(400, message="`views` must be an integer")
+            if not isinstance(votes, int):
+                return abort(400, message="`votes` must be an integer")
             post.votes = votes
 
         db.session.commit()
