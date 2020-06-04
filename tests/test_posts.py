@@ -61,31 +61,21 @@ def test_create_post(app, db):
         assert "created_at" in data
 
 
-def test_create_post_with_no_content(app, db):
+def test_create_post_with_missing_content(app, db):
     with app.test_client() as client:
         post = {
             "title": "A title",
-            "summary": "A short summary",
+            "summary": "A summary"
         }
 
-        response = client.post("/api/posts",
+        response = client.post('/api/posts',
                                content_type='multipart/form-data',
                                data=post)
 
-        assert "200" in response.status
-
-        data = json.loads(response.data.decode("utf-8"))
-
-        assert post["title"] == data["title"]
-        assert post["summary"] == data["summary"]
-
-        assert "id" in data
-        assert "created_at" in data
-
-        assert data.get("content") is None
+        assert "400" in response.status
 
 
-def test_create_post_with_no_summary(app, db):
+def test_create_post_with_missing_summary(app, db):
     with app.test_client() as client:
         post = {
             "title": "A title",
@@ -96,17 +86,7 @@ def test_create_post_with_no_summary(app, db):
                                content_type='multipart/form-data',
                                data=post)
 
-        assert "200" in response.status
-
-        data = json.loads(response.data.decode("utf-8"))
-
-        assert post["title"] == data["title"]
-        assert post["content"] == data["content"]
-
-        assert "id" in data
-        assert "created_at" in data
-
-        assert data.get("summary") is None
+        assert "400" in response.status
 
 
 def test_create_post_with_tags(app, db):

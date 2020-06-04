@@ -173,8 +173,10 @@ class PostListResource(Resource):
         files = request.files.getlist('files')
         names = request.form.getlist('names')
 
-        if title is None or title == "":
-            return abort(400, message="Title field is required.")
+        if not (title and summary and content):
+            return abort(400,
+                         message="'Title', 'Summary' and 'Content' \
+                         fields are required.")
 
         def error_message(name, count):
             return f"`{name}` must not be more than {count} characters."
