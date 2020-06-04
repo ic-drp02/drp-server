@@ -19,6 +19,9 @@ class Post(db.Model):
 
     files = relationship("File", back_populates="post")
 
+    views = db.Column(db.Integer, server_default="0", nullable=False)
+    votes = db.Column(db.Integer, server_default="0", nullable=False)
+
     def __repr__(self):
         return f"<Post '{self.title}'>"
 
