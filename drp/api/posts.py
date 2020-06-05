@@ -111,6 +111,12 @@ class PostListResource(Resource):
         """
         Gets a list of all posts.
         ---
+        parameters:
+          - in: query
+            name: sort
+            type: string
+            enum:
+              - views
         responses:
           200:
             schema:
@@ -119,7 +125,14 @@ class PostListResource(Resource):
                 $ref: "#/definitions/Post"
 
         """
-        return [serialize_post(post) for post in Post.query.all()]
+        sort = request.args.get("sort")
+
+        if sort == "views":
+            posts = Post.query.order_by(Post.views.desc())
+        else:
+            posts = Post.query.all()
+
+        return [serialize_post(post) for post in posts]
 
     def post(self):
         """
@@ -244,3 +257,45 @@ class PostListResource(Resource):
         db.session.commit()
 
         return serialize_post(post)
+
+
+class PostStatsResource(Resource):
+
+    def get(self, id):
+        post = Post.query.filter(Post.id == id).one_or_none()
+
+        if post is None:
+            return abort(404)
+
+        return {
+            "views": post.views,
+            "votes": post.votes,
+        }
+
+    def put(self, id):
+        post = Post.query.filter(Post.id == id).one_or_none()
+
+        if post is None:
+            return abort(404)
+
+        body = request.json
+
+        views = body.get("views")
+        votes = body.get("votes")
+
+        if views is not None:
+            if not isinstance(views, int):
+                return abort(400, message="`views` must be an integer")
+            post.views = views
+
+        if votes is not None:
+            if not isinstance(votes, int):
+                return abort(400, message="`votes` must be an integer")
+            post.votes = votes
+
+        db.session.commit()
+
+        return {
+            "views": post.views,
+            "votes": post.votes,
+        }
