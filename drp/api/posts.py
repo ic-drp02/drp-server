@@ -111,6 +111,12 @@ class PostListResource(Resource):
         """
         Gets a list of all posts.
         ---
+        parameters:
+          - in: query
+            name: sort
+            type: string
+            enum:
+              - views
         responses:
           200:
             schema:
@@ -119,7 +125,14 @@ class PostListResource(Resource):
                 $ref: "#/definitions/Post"
 
         """
-        return [serialize_post(post) for post in Post.query.all()]
+        sort = request.args.get("sort")
+
+        if sort == "views":
+            posts = Post.query.order_by(Post.views.desc())
+        else:
+            posts = Post.query.all()
+
+        return [serialize_post(post) for post in posts]
 
     def post(self):
         """
