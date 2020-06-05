@@ -256,7 +256,7 @@ class PostStatsResource(Resource):
             "votes": post.votes,
         }
 
-    def post(self, id):
+    def put(self, id):
         post = Post.query.filter(Post.id == id).one_or_none()
 
         if post is None:
