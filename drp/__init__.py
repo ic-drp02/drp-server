@@ -37,6 +37,8 @@ def init_api(app):
     api.add_resource(res.SiteResource, "/api/sites/<int:id>")
     api.add_resource(res.SiteListResource, "/api/sites")
 
+    app.register_blueprint(res.notifications, url_prefix="/api/notifications")
+
 
 def create_app(test_config=None):
     app = Flask(__name__)
