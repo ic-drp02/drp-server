@@ -5,6 +5,7 @@ from .files import (FileResource, FileListResource, RawFileViewResource,
 from .questions import QuestionResource, QuestionListResource
 from .site import SiteResource, SiteListResource
 from .subject import SubjectResource, SubjectListResource
+from .notifications import notifications
 
 __all__ = ["PostResource", "PostListResource",
            "TagResource", "TagListResource",
@@ -12,4 +13,5 @@ __all__ = ["PostResource", "PostListResource",
            "FileResource", "FileListResource",
            "RawFileViewResource", "RawFileDownloadResource",
            "SiteResource", "SiteListResource",
-           "SubjectResource", "SubjectListResource"]
+           "SubjectResource", "SubjectListResource",
+           "notifications"]

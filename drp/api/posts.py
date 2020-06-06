@@ -12,6 +12,7 @@ from ..db import db
 from ..models import Post, Tag, File
 from ..swag import swag
 
+from .. import notifications
 from .tags import serialize_tag
 from .files import serialize_file, allowed_file
 
@@ -242,5 +243,7 @@ class PostListResource(Resource):
             db.session.add(file)
 
         db.session.commit()
+
+        notifications.broadcast(title, summary)
 
         return serialize_post(post)
