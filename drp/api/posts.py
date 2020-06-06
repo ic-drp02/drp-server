@@ -120,7 +120,8 @@ class PostListResource(Resource):
                 $ref: "#/definitions/Post"
 
         """
-        return [serialize_post(post) for post in Post.query.all()]
+        return [serialize_post(post)
+                for post in Post.query.order_by(Post.created_at.desc())]
 
     def post(self):
         """
