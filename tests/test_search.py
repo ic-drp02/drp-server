@@ -136,3 +136,60 @@ def test_search_form(app, db):
 
         assert len(posts) == 1
         assert "beginning" in posts[0]["title"]
+
+
+def test_search_invalid_pagination(app, db):
+    with app.test_client() as client:
+        response = client.get(
+            "/api/search/posts/alpha?page=1&results_per_page=invalid")
+
+        assert "400" in response.status
+
+        result = json.loads(response.data.decode("utf-8"))
+
+        assert "number" in result["message"]
+
+
+def test_search_first_page(app, db):
+    add_test_posts(app, db)
+
+    with app.test_client() as client:
+        response = client.get(
+            "/api/search/posts/alpha beta?page=0&results_per_page=2")
+
+        assert "200" in response.status
+
+        posts = json.loads(response.data.decode("utf-8"))
+
+        assert len(posts) == 2
+        assert posts[0]["title"] == "Test 3"
+        assert posts[1]["title"] == "Test 1"
+
+
+def test_search_second_page(app, db):
+    add_test_posts(app, db)
+
+    with app.test_client() as client:
+        response = client.get(
+            "/api/search/posts/alpha beta?page=1&results_per_page=2")
+
+        assert "200" in response.status
+
+        posts = json.loads(response.data.decode("utf-8"))
+
+        assert len(posts) == 1
+        assert posts[0]["title"] == "Test 2"
+
+
+def test_search_high_page(app, db):
+    add_test_posts(app, db)
+
+    with app.test_client() as client:
+        response = client.get(
+            "/api/search/posts/alpha beta?page=20&results_per_page=2")
+
+        assert "200" in response.status
+
+        posts = json.loads(response.data.decode("utf-8"))
+
+        assert len(posts) == 0
