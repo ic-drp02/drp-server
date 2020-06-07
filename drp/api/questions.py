@@ -95,6 +95,51 @@ class QuestionResource(Resource):
 
         return "", 204
 
+    def put(self, id):
+        """
+        Updates a question.
+        ---
+        parameters:
+          - in: path
+            name: id
+            type: integer
+            required: true
+          - in: body
+            schema:
+              type: object
+              properties:
+                text:
+                  type: string
+                  required: true
+        responses:
+          200:
+            description: Success
+            schema:
+              $ref: "#/definitions/Question"
+          400:
+            description: Invalid request
+        """
+        question = Question.query.filter(Question.id == id).one_or_none()
+
+        if question is None:
+            return abort(404)
+
+        body = request.json
+
+        if body is None:
+            return abort(400, message="Missing request body.")
+
+        text = body.get("text")
+
+        if text is None or text == "":
+            return abort(400, message="Text is required.")
+
+        question.text = text
+
+        db.session.commit()
+
+        return serialize_question(question)
+
 
 class QuestionListResource(Resource):
 
