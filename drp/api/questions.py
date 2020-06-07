@@ -1,4 +1,4 @@
-from flask import request
+from flask import Blueprint, request
 from flask_restful import Resource, abort
 
 from ..db import db
@@ -7,6 +7,23 @@ from ..swag import swag
 
 from .site import serialize_site
 from .subject import serialize_subject
+
+
+questions = Blueprint("questions", __name__)
+
+
+@questions.route("/<int:id>/resolve", methods=["POST"])
+def resolve(id):
+    question = Question.query.filter(Question.id == id).one_or_none()
+
+    if question is None:
+        return abort(404)
+
+    question.resolved = True
+
+    db.session.commit()
+
+    return serialize_question(question)
 
 
 @swag.definition("Question")
@@ -41,7 +58,8 @@ def serialize_question(question):
         "grade": question.grade.name.lower(),
         "specialty": question.specialty,
         "subject": serialize_subject(question.subject),
-        "text": question.text
+        "text": question.text,
+        "resolved": question.resolved,
     }
 
 

@@ -47,5 +47,7 @@ class Question(db.Model):
     site = relationship("Site")
     subject = relationship("Subject")
 
+    resolved = db.Column(db.Boolean, nullable=False, server_default="false")
+
     def __repr__(self):
         return f"<Question '{self.text}'>"
