@@ -138,6 +138,42 @@ def test_search_form(app, db):
         assert "beginning" in posts[0]["title"]
 
 
+def test_search_prefix(app, db):
+    add_test_posts(app, db)
+
+    with app.test_client() as client:
+        response = client.get("/api/search/posts/capab")
+
+        assert "200" in response.status
+
+        posts = json.loads(response.data.decode("utf-8"))
+
+        assert len(posts) == 1
+        assert "beginning" in posts[0]["title"]
+
+        response = client.get("/api/search/posts/conta")
+
+        assert "200" in response.status
+
+        posts = json.loads(response.data.decode("utf-8"))
+
+        assert len(posts) == 1
+        assert "Turtle" in posts[0]["title"]
+
+
+def test_search_stop_word(app, db):
+    add_test_posts(app, db)
+
+    with app.test_client() as client:
+        response = client.get("/api/search/posts/the")
+
+        assert "200" in response.status
+
+        posts = json.loads(response.data.decode("utf-8"))
+
+        assert len(posts) == 0
+
+
 def test_search_invalid_pagination(app, db):
     with app.test_client() as client:
         response = client.get(
