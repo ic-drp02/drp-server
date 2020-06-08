@@ -74,7 +74,7 @@ class PostSearchResource(Resource):
         # Query for the search results ordered by rank
         query = db.session.query(Post, ts_rank) \
             .filter(Post.__ts_vector__.op('@@')(ts_query)) \
-            .order_by(text("rank desc"))
+            .order_by(text("rank desc"), Post.created_at.desc())
 
         if page is None or results_per_page is None:
             return extract_results(query)
