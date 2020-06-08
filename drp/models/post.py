@@ -1,7 +1,19 @@
 from sqlalchemy.sql import func
+from sqlalchemy.sql.expression import cast
 from sqlalchemy.orm import relationship
+from sqlalchemy.dialects import postgresql
 
 from ..db import db
+
+
+def create_tsvector(*components):
+    """Creates a postgresql text search vector from the provided components."""
+    coalesced = list(
+        map(lambda c: cast(func.coalesce(c, ''), postgresql.TEXT), components))
+    expression = coalesced[0]
+    for e in coalesced[1:]:
+        expression += ' ' + e
+    return func.to_tsvector('english', expression)
 
 
 class Post(db.Model):
@@ -18,6 +30,20 @@ class Post(db.Model):
     tags = relationship("Tag", secondary="post_tag")
 
     files = relationship("File", back_populates="post")
+
+    __ts_vector__ = create_tsvector(
+        title,
+        summary,
+        content
+    )
+
+    __table_args__ = (
+        db.Index(
+            'idx_post_fulltextsearch',
+            __ts_vector__,
+            postgresql_using='gin'
+        ),
+    )
 
     def __repr__(self):
         return f"<Post '{self.title}'>"

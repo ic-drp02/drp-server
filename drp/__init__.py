@@ -18,6 +18,9 @@ def init_api(app):
     api.add_resource(res.PostResource, "/api/posts/<int:id>")
     api.add_resource(res.PostListResource, "/api/posts")
 
+    api.add_resource(res.PostSearchResource,
+                     "/api/search/posts/<string:searched>")
+
     api.add_resource(res.TagResource, "/api/tags/<int:id>")
     api.add_resource(res.TagListResource, "/api/tags")
 
