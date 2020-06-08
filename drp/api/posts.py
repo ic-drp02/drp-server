@@ -245,6 +245,6 @@ class PostListResource(Resource):
 
         db.session.commit()
 
-        notifications.broadcast(title, summary)
+        notifications.broadcast(title, summary, data={"id": post.id})
 
         return serialize_post(post)

@@ -13,7 +13,7 @@ def chunks(lst, n):
         yield lst[i:i + n]
 
 
-def broadcast(title: str, body: str):
+def broadcast(title: str, body: str, data):
     headers = {
         "accept": "application/json",
         "accept-encoding": "gzip, deflate",
@@ -26,7 +26,8 @@ def broadcast(title: str, body: str):
     for chunk in chunks(devices, 100):
         # Generate message for each target device
         messages = [{"to": device.expo_push_token,
-                     "sound": "default", "title": title, "body": body}
+                     "sound": "default", "title": title, "body": body,
+                     "data": data}
                     for device in chunk]
 
         # Compress request body to reduce overhead with many registered devices
