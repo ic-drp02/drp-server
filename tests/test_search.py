@@ -174,6 +174,27 @@ def test_search_stop_word(app, db):
         assert len(posts) == 0
 
 
+def test_search_special_chars(app, db):
+    add_test_posts(app, db)
+
+    with app.test_client() as client:
+        response = client.get("""/api/search/posts/:"';""")
+
+        assert "200" in response.status
+
+        posts = json.loads(response.data.decode("utf-8"))
+
+        assert len(posts) == 0
+
+        response = client.get("""/api/search/posts/*'""")
+
+        assert "200" in response.status
+
+        posts = json.loads(response.data.decode("utf-8"))
+
+        assert len(posts) == 0
+
+
 def test_search_invalid_pagination(app, db):
     with app.test_client() as client:
         response = client.get(
