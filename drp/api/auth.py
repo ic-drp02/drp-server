@@ -135,7 +135,8 @@ def register():
         urlencode({"token": token})
 
     message = Message("Confirm your account: " + email, recipients=[email])
-    message.html = f"<p>Thanks for registering for the ICON guidelines app.</p><p>Click <a href=\"{url}\">here</a> to confirm your account.</p>"
+    message.html = "<p>Thanks for registering for the ICON guidelines app." \
+        f"</p><p>Click <a href=\"{url}\">here</a> to confirm your account.</p>"
 
     mail.send(message)
 
