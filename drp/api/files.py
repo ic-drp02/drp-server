@@ -75,8 +75,11 @@ class FileResource(Resource):
         if file is None:
             return abort(404)
 
-        os.remove(os.path.join(
-            current_app.config['UPLOAD_FOLDER'], file.filename))
+        try:
+            os.remove(os.path.join(
+                current_app.config['UPLOAD_FOLDER'], file.filename))
+        except OSError as e:
+            print("Could not delete file, " + repr(e))
 
         db.session.delete(file)
         db.session.commit()

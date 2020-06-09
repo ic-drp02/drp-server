@@ -95,8 +95,11 @@ class PostResource(Resource):
             return abort(404)
 
         for file in post.files:
-            os.remove(os.path.join(
-                current_app.config['UPLOAD_FOLDER'], file.filename))
+            try:
+                os.remove(os.path.join(
+                    current_app.config['UPLOAD_FOLDER'], file.filename))
+            except OSError as e:
+                print("Could not delete file, " + repr(e))
 
             db.session.delete(file)
 
