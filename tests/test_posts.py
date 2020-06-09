@@ -37,6 +37,30 @@ def test_get_all_posts(app, db):
             assert post["content"] == content
 
 
+def test_get_all_guidelines(app, db):
+    title_ng = "Not a guideline"
+    title_g = "Guideline"
+    summary = "A short summary"
+    content = "A few paragraphs of content..."
+
+    with app.app_context():
+        db.session.add(Post(title=title_ng, summary=summary, content=content))
+        db.session.add(Post(title=title_g, summary=summary,
+                            content=content, is_guideline=True))
+        db.session.commit()
+
+    with app.test_client() as client:
+        response = client.get("/api/guidelines")
+
+        assert "200" in response.status
+
+        data = json.loads(response.data.decode("utf-8"))
+
+        assert len(data) == 1
+
+        assert data[0]["title"] == title_g
+
+
 def test_create_post(app, db):
     with app.test_client() as client:
         post = {
