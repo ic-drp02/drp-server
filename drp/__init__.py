@@ -3,6 +3,7 @@ from flask_restful import Api
 
 from . import config, api as res
 from .db import db
+from .mail import mail
 from .swag import swag
 
 
@@ -14,8 +15,6 @@ def init_cli(app):
 
 def init_api(app):
     api = Api(app)
-
-    api.add_resource(res.AuthResource, "/api/authenticate")
 
     api.add_resource(res.PostResource, "/api/posts/<int:id>")
     api.add_resource(res.PostListResource, "/api/posts")
@@ -50,6 +49,8 @@ def init_api(app):
     app.register_blueprint(res.questions, url_prefix="/api/questions")
     app.register_blueprint(res.notifications, url_prefix="/api/notifications")
 
+    app.register_blueprint(res.auth, url_prefix="/auth")
+
 
 def create_app(test_config=None):
     app = Flask(__name__)
@@ -61,6 +62,12 @@ def create_app(test_config=None):
     app.config["UPLOAD_FOLDER"] = config.UPLOAD_FOLDER
     app.config["ALLOWED_FILE_EXTENSIONS"] = config.ALLOWED_FILE_EXTENSIONS
 
+    app.config["MAIL_SERVER"] = config.MAIL_SERVER
+    app.config["MAIL_USE_TLS"] = True
+    app.config["MAIL_USERNAME"] = config.MAIL_USERNAME
+    app.config["MAIL_PASSWORD"] = config.MAIL_PASSWORD
+    app.config["MAIL_DEFAULT_SENDER"] = config.MAIL_DEFAULT_SENDER
+
     if test_config is not None:
         app.config.update(test_config)
 
@@ -71,6 +78,8 @@ def create_app(test_config=None):
     # with app.app_context():
     #     import flask_migrate
     #     flask_migrate.upgrade()
+
+    mail.init_app(app)
 
     # Register cli commands
     init_cli(app)

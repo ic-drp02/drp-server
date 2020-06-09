@@ -1,4 +1,7 @@
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 if "DATABASE_URI" in os.environ:
     DATABASE_URI = os.environ.get("DATABASE_URI")
@@ -26,3 +29,8 @@ if IS_DEV_ENV:
     JWT_SECRET_KEY = "bhO.#v8En8ka8O|ZX*59B`kD3V7ZF7#V^u67TkMCV50.:H7awQ3MTGHJIJd>H<N"  # noqa: E501
 else:
     JWT_SECRET_KEY = os.environ["JWT_SECRET_KEY"]
+
+MAIL_SERVER = os.environ["MAIL_SERVER"]
+MAIL_USERNAME = os.environ["MAIL_USERNAME"]
+MAIL_PASSWORD = os.environ["MAIL_PASSWORD"]
+MAIL_DEFAULT_SENDER = os.environ["MAIL_DEFAULT_SENDER"]

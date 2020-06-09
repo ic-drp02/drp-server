@@ -122,3 +122,6 @@ dmypy.json
 uploads/*
 # Except README.md
 !uploads/README.md
+
+# dotenv variables
+.env

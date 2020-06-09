@@ -1,4 +1,4 @@
-from .auth import AuthResource
+from .auth import auth
 from .posts import (PostResource, PostListResource, GuidelineResource,
                     GuidelineListResource)
 from .search import PostSearchResource
@@ -20,7 +20,5 @@ __all__ = ["PostResource", "PostListResource",
            "RawFileViewResource", "RawFileDownloadResource",
            "SiteResource", "SiteListResource",
            "SubjectResource", "SubjectListResource",
-           "AuthResource",
-           "notifications", "questions",
-           "AuthResource",
+           "notifications", "questions", "auth",
            "UserResource", "UserListResource"]
