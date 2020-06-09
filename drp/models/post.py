@@ -23,6 +23,11 @@ class Post(db.Model):
     title = db.Column(db.String(120), nullable=False)
     summary = db.Column(db.String(200))
     content = db.Column(db.Text())
+    is_guideline = db.Column(db.Boolean())
+    superseding_id = db.Column(db.Integer, db.ForeignKey('posts.id'))
+    superseding = relationship(
+        'Post', uselist=False, remote_side=[id],
+        backref=db.backref('superseded_by', uselist=False))
 
     created_at = db.Column(db.DateTime(timezone=True), nullable=False,
                            server_default=func.now())

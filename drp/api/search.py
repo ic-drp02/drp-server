@@ -93,6 +93,10 @@ class PostSearchResource(Resource):
             in: query
             type: number
             required: false
+          - name: guidelines_only
+            in: query
+            type: boolean
+            required: false
         responses:
           200:
             schema:
@@ -105,13 +109,16 @@ class PostSearchResource(Resource):
 
         page = request.args.get("page")
         results_per_page = request.args.get("results_per_page")
+        guidelines_only = request.args.get("guidelines_only")
 
         ts_query, ts_rank = construct_fulltext_query_and_rank(searched)
 
         # Query for the search results ordered by rank
         query = db.session.query(Post, ts_rank) \
-            .filter(Post.__ts_vector__.op('@@')(ts_query)) \
-            .order_by(text("rank desc"), Post.created_at.desc())
+            .filter(Post.__ts_vector__.op('@@')(ts_query))
+        if guidelines_only == "true":
+            query = query.filter(Post.is_guideline)
+        query = query.order_by(text("rank desc"), Post.created_at.desc())
 
         if page is None or results_per_page is None:
             return extract_results_posts(query)
