@@ -15,22 +15,29 @@ from ..models import User, UserRole
 from ..mail import mail
 from ..swag import swag
 
+from .users import serialize_role
 from .utils import error
 
 auth = Blueprint("auth", __name__)
 
 
 @swag.definition("TokenResponse")
-def token_response(token):
+def token_response(id, token, role):
     """
     A response containing a jwt token for authentication with the api.
     ---
     properties:
-      token:
+      id:
         type: integer
+      token:
+        type: string
+      role:
+        type: string
     """
     return {
-        "token": token
+        "id": id,
+        "token": token,
+        "role": serialize_role(role),
     }
 
 
@@ -97,7 +104,7 @@ def authenticate():
 
     token = encode(claims, config.JWT_SECRET_KEY, algorithm="HS256")
 
-    return token_response(token.decode("utf-8"))
+    return token_response(user.id, token.decode("utf-8"), user.role)
 
 
 @auth.route("/register", methods=["POST"])
