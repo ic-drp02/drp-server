@@ -49,16 +49,16 @@ def authenticate():
     ---
     parameters:
         - in: body
-        name: credentials
-        schema:
-            type: object
-            properties:
-            email:
-                type: string
-                required: true
-            password:
-                type: string
-                required: true
+          name: credentials
+          schema:
+              type: object
+              properties:
+              email:
+                  type: string
+                  required: true
+              password:
+                  type: string
+                  required: true
     """
     body = request.json
 
