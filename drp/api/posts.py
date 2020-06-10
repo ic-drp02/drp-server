@@ -256,7 +256,10 @@ class PostListResource(Resource):
             old_post = Post.query.filter(Post.id == superseding) \
                 .one_or_none()
             if old_post is None:
-                return abort(400, message="Invalid superseding post ID.")
+                return abort(400, message="Invalid old post ID.")
+            if old_post.superseded_by is not None:
+                return abort(400, message="Selected old post has already "
+                             "been superseded.")
             post = Post(title=title, summary=summary, content=content,
                         is_guideline=True, superseding=old_post, tags=tags)
         elif is_guideline == "true":
