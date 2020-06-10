@@ -97,7 +97,7 @@ class PostSearchResource(Resource):
         query = db.session.query(Post, ts_rank) \
             .filter(Post.__ts_vector__.op('@@')(ts_query))
         if (include_old != "true"):
-            query = query.filter(Post.superseded_by == None)
+            query = query.filter(Post.superseded_by == None)  # noqa: E711
         if guidelines_only == "true":
             query = query.filter(Post.is_guideline)
         query = query.order_by(text("rank desc"), Post.created_at.desc())

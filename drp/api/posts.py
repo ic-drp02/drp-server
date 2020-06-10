@@ -144,7 +144,7 @@ class PostListResource(Resource):
 
         query = Post.query
         if include_old != "true":
-            query = query.filter(Post.superseded_by == None)
+            query = query.filter(Post.superseded_by == None)  # noqa: E711
         return [serialize_post(post)
                 for post in query.order_by(Post.created_at.desc())]
 
@@ -332,7 +332,7 @@ class GuidelineListResource(Resource):
 
         query = Post.query.filter(Post.is_guideline)
         if include_old != "true":
-            query = query.filter(Post.superseded_by == None)
+            query = query.filter(Post.superseded_by == None)  # noqa: E711
         return [serialize_post(post)
                 for post in query.order_by(Post.created_at.desc())]
 
