@@ -127,6 +127,11 @@ class PostListResource(Resource):
         """
         Gets a list of all posts.
         ---
+        parameters:
+          - name: include_old
+            in: query
+            type: boolean
+            required: false
         responses:
           200:
             schema:
@@ -135,8 +140,13 @@ class PostListResource(Resource):
                 $ref: "#/definitions/Post"
 
         """
+        include_old = request.args.get("include_old")
+
+        query = Post.query
+        if include_old != "true":
+            query = query.filter(Post.superseded_by == None)
         return [serialize_post(post)
-                for post in Post.query.order_by(Post.created_at.desc())]
+                for post in query.order_by(Post.created_at.desc())]
 
     def post(self):
         """
@@ -305,6 +315,11 @@ class GuidelineListResource(Resource):
         """
         Gets a list of all guidelines.
         ---
+        parameters:
+          - name: include_old
+            in: query
+            type: boolean
+            required: false
         responses:
           200:
             schema:
@@ -313,9 +328,13 @@ class GuidelineListResource(Resource):
                 $ref: "#/definitions/Post"
 
         """
+        include_old = request.args.get("include_old")
+
+        query = Post.query.filter(Post.is_guideline)
+        if include_old != "true":
+            query = query.filter(Post.superseded_by == None)
         return [serialize_post(post)
-                for post in Post.query.filter(Post.is_guideline)
-                .order_by(Post.created_at.desc())]
+                for post in query.order_by(Post.created_at.desc())]
 
 
 class GuidelineResource(Resource):

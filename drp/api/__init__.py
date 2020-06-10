@@ -1,6 +1,6 @@
 from .posts import (PostResource, PostListResource, GuidelineResource,
                     GuidelineListResource)
-from .search import PostSearchResource, FileSearchResource
+from .search import PostSearchResource
 from .tags import TagListResource, TagResource
 from .files import (FileResource, FileListResource, RawFileViewResource,
                     RawFileDownloadResource)
@@ -11,7 +11,7 @@ from .notifications import notifications
 
 __all__ = ["PostResource", "PostListResource",
            "GuidelineResource", "GuidelineListResource",
-           "PostSearchResource", "FileSearchResource",
+           "PostSearchResource",
            "TagResource", "TagListResource",
            "QuestionResource", "QuestionListResource",
            "FileResource", "FileListResource",
