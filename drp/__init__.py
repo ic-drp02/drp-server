@@ -43,11 +43,9 @@ def init_api(app):
     api.add_resource(res.SiteResource, "/api/sites/<int:id>")
     api.add_resource(res.SiteListResource, "/api/sites")
 
-    api.add_resource(res.UserResource, "/api/users/<int:id>")
-    api.add_resource(res.UserListResource, "/api/users")
-
     app.register_blueprint(res.questions, url_prefix="/api/questions")
     app.register_blueprint(res.notifications, url_prefix="/api/notifications")
+    app.register_blueprint(res.users, url_prefix="/api/users")
 
     app.register_blueprint(res.auth, url_prefix="/auth")
 
