@@ -85,7 +85,7 @@ def create_user():
         else:
             raise
 
-    url = f"{request.host_url}/auth/register/confirm?" + \
+    url = f"{request.host_url}auth/register/confirm?" + \
         urlencode({"token": token})
 
     message = Message("Confirm your account: " + email, recipients=[email])

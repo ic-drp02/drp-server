@@ -142,7 +142,7 @@ def register():
     db.session.add(user)
     db.session.commit()
 
-    url = f"{request.host_url}/auth/register/confirm?" + \
+    url = f"{request.host_url}auth/register/confirm?" + \
         urlencode({"token": token})
 
     message = Message("Confirm your account: " + email, recipients=[email])
