@@ -8,6 +8,8 @@ from datetime import datetime
 from flask import request, current_app
 from flask_restful import Resource, abort
 
+from collections import deque
+
 from ..db import db
 from ..models import Post, Tag, File
 from ..swag import swag
@@ -311,3 +313,51 @@ class GuidelineListResource(Resource):
         return [serialize_post(post)
                 for post in Post.query.filter(Post.is_guideline)
                 .order_by(Post.created_at.desc())]
+
+
+class GuidelineResource(Resource):
+
+    def get(self, id):
+        """
+        Gets a list of all revisions of a guideline.
+        ---
+        parameters:
+          - name: id
+            in: path
+            type: integer
+            required: true
+          - name: reverse
+            in: query
+            type: boolean
+            required: false
+        responses:
+          200:
+            schema:
+              type: array
+              items:
+                $ref: "#/definitions/Post"
+          404:
+            description: Not found
+        """
+
+        post = Post.query.filter(Post.id == id).one_or_none()
+        if post is None or not post.is_guideline:
+            return abort(404)
+
+        d = deque([post])
+
+        while d[0].superseding is not None:
+            post = d[0].superseding
+            d.appendleft(post)
+
+        while d[-1].superseded_by is not None:
+            post = d[-1].superseded_by
+            d.append(post)
+
+        reverse = request.args.get("reverse")
+
+        if reverse == "true":
+            d.reverse()
+
+        return [serialize_post(post)
+                for post in d]

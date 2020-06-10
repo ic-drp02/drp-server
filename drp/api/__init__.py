@@ -1,4 +1,5 @@
-from .posts import PostResource, PostListResource, GuidelineListResource
+from .posts import (PostResource, PostListResource, GuidelineResource,
+                    GuidelineListResource)
 from .search import PostSearchResource, FileSearchResource
 from .tags import TagListResource, TagResource
 from .files import (FileResource, FileListResource, RawFileViewResource,
@@ -8,7 +9,8 @@ from .site import SiteResource, SiteListResource
 from .subject import SubjectResource, SubjectListResource
 from .notifications import notifications
 
-__all__ = ["PostResource", "PostListResource", "GuidelineListResource",
+__all__ = ["PostResource", "PostListResource",
+           "GuidelineResource", "GuidelineListResource",
            "PostSearchResource", "FileSearchResource",
            "TagResource", "TagListResource",
            "QuestionResource", "QuestionListResource",
