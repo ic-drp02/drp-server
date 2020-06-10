@@ -11,7 +11,7 @@ from flask_restful import Resource, abort
 from collections import deque
 
 from ..db import db
-from ..models import Post, Tag, File
+from ..models import Post, Post_Tag, Tag, File
 from ..swag import swag
 
 from .. import notifications
@@ -128,9 +128,17 @@ class PostListResource(Resource):
         Gets a list of all posts.
         ---
         parameters:
+          - name: guidelines_only
+            in: query
+            type: boolean
+            required: false
           - name: include_old
             in: query
             type: boolean
+            required: false
+          - name: tag
+            in: query
+            type: string
             required: false
         responses:
           200:
@@ -140,11 +148,18 @@ class PostListResource(Resource):
                 $ref: "#/definitions/Post"
 
         """
+        guidelines_only = request.args.get("guidelines_only")
         include_old = request.args.get("include_old")
+        tag = request.args.get("tag")
 
         query = Post.query
+
+        if guidelines_only == "true":
+            query = query.filter(Post.is_guideline)
         if include_old != "true":
             query = query.filter(Post.superseded_by == None)  # noqa: E711
+        if tag is not None:
+            query = query.join(Post_Tag).join(Tag).filter(Tag.name == tag)
         return [serialize_post(post)
                 for post in query.order_by(Post.created_at.desc())]
 
@@ -307,34 +322,6 @@ class PostListResource(Resource):
         notifications.broadcast(title, summary, data={"id": post.id})
 
         return serialize_post(post)
-
-
-class GuidelineListResource(Resource):
-
-    def get(self):
-        """
-        Gets a list of all guidelines.
-        ---
-        parameters:
-          - name: include_old
-            in: query
-            type: boolean
-            required: false
-        responses:
-          200:
-            schema:
-              type: array
-              items:
-                $ref: "#/definitions/Post"
-
-        """
-        include_old = request.args.get("include_old")
-
-        query = Post.query.filter(Post.is_guideline)
-        if include_old != "true":
-            query = query.filter(Post.superseded_by == None)  # noqa: E711
-        return [serialize_post(post)
-                for post in query.order_by(Post.created_at.desc())]
 
 
 class GuidelineResource(Resource):
