@@ -50,7 +50,7 @@ def test_get_all_guidelines(app, db):
         db.session.commit()
 
     with app.test_client() as client:
-        response = client.get("/api/guidelines")
+        response = client.get("/api/posts?guidelines_only=true")
 
         assert "200" in response.status
 
