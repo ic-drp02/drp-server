@@ -118,7 +118,7 @@ class PostResource(Resource):
         db.session.delete(post)
         db.session.commit()
 
-        return '', 204
+        return "", 204
 
 
 class PostListResource(Resource):

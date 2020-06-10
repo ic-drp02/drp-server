@@ -53,6 +53,8 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run tests
+        env:
+          JWT_SECRET_KEY: "AoIEq52yRHMgViDzYSuScgoBxwdN1Lcf"
         run: pytest tests -v --full-trace
 
   deploy:
