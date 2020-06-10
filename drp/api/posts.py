@@ -8,6 +8,8 @@ from datetime import datetime
 from flask import request, current_app
 from flask_restful import Resource, abort
 
+from collections import deque
+
 from ..db import db
 from ..models import Post, Tag, File
 from ..swag import swag
@@ -41,12 +43,22 @@ def serialize_post(post):
         type: array
         items:
           $ref: "#/definitions/File"
+      is_guideline:
+        type: boolean
+      superseding:
+        type: integer
+      superseded_by:
+        type:integer
     """
     return {
         "id": post.id,
         "title": post.title,
         "summary": post.summary,
         "content": post.content,
+        "is_guideline": post.is_guideline,
+        "superseding": post.superseding_id,
+        "superseded_by": post.superseded_by.id
+        if post.superseded_by is not None else None,
         "created_at": post.created_at.astimezone(pytz.utc).isoformat(),
         "tags": [serialize_tag(tag) for tag in post.tags],
         "files": [serialize_file(file) for file in post.files]
@@ -115,6 +127,11 @@ class PostListResource(Resource):
         """
         Gets a list of all posts.
         ---
+        parameters:
+          - name: include_old
+            in: query
+            type: boolean
+            required: false
         responses:
           200:
             schema:
@@ -123,8 +140,13 @@ class PostListResource(Resource):
                 $ref: "#/definitions/Post"
 
         """
+        include_old = request.args.get("include_old")
+
+        query = Post.query
+        if include_old != "true":
+            query = query.filter(Post.superseded_by == None)  # noqa: E711
         return [serialize_post(post)
-                for post in Post.query.order_by(Post.created_at.desc())]
+                for post in query.order_by(Post.created_at.desc())]
 
     def post(self):
         """
@@ -166,6 +188,14 @@ class PostListResource(Resource):
             description: The names of files attached to the post.
             items:
               type: string
+          - in: formData
+            type: boolean
+            name: is_guideline
+            description: Indicates whether a post is a guideline.
+          - in: formData
+            type: integer
+            name: superseding
+            description: ID of older version of the guideline.
         responses:
           200:
             schema:
@@ -177,7 +207,10 @@ class PostListResource(Resource):
         tag_names = request.form.getlist('tags')
         files = request.files.getlist('files')
         names = request.form.getlist('names')
+        is_guideline = request.form.get('is_guideline')
+        superseding = request.form.get('superseding')
 
+        # Check that required fields are present
         if title is None or summary is None or content is None:
             return abort(400,
                          message="`title`, `summary` and `content` \
@@ -186,6 +219,7 @@ class PostListResource(Resource):
         if title == "":
             return abort(400, message="`title` field cannot be empty.")
 
+        # Check that no field exceeds permitted length
         def error_message(name, count):
             return f"`{name}` must not be more than {count} characters."
 
@@ -195,6 +229,7 @@ class PostListResource(Resource):
         if summary is not None and len(summary) > 200:
             return abort(400, message=error_message("summary", 200))
 
+        # Check that tags are valid
         tags = None
 
         if len(tag_names) != 0:
@@ -205,6 +240,7 @@ class PostListResource(Resource):
 
         tags = tags.all() if tags is not None else []
 
+        # Check that files and the associated names are valid
         if len(files) != len(names):
             return abort(400, message="The number of files must match "
                          "the number of supplied names.")
@@ -220,8 +256,28 @@ class PostListResource(Resource):
                              "you believe that this file type is safe "
                              "to upload, contact the developer.")
 
-        post = Post(title=title, summary=summary,
-                    content=content, tags=tags)
+        # Check that the fields for posting guidelines are valid
+        if is_guideline is not None and is_guideline != "false" \
+                and is_guideline != "true":
+            return abort(400, message="The value is_guideline="
+                         f"{is_guideline} is invalid.")
+
+        if is_guideline == "true" and superseding is not None:
+            old_post = Post.query.filter(Post.id == superseding) \
+                .one_or_none()
+            if old_post is None:
+                return abort(400, message="Invalid old post ID.")
+            if old_post.superseded_by is not None:
+                return abort(400, message="Selected old post has already "
+                             "been superseded.")
+            post = Post(title=title, summary=summary, content=content,
+                        is_guideline=True, superseding=old_post, tags=tags)
+        elif is_guideline == "true":
+            post = Post(title=title, summary=summary, content=content,
+                        is_guideline=True, tags=tags)
+        else:
+            post = Post(title=title, summary=summary, content=content,
+                        is_guideline=False, tags=tags)
         db.session.add(post)
 
         # Save files
@@ -251,3 +307,79 @@ class PostListResource(Resource):
         notifications.broadcast(title, summary, data={"id": post.id})
 
         return serialize_post(post)
+
+
+class GuidelineListResource(Resource):
+
+    def get(self):
+        """
+        Gets a list of all guidelines.
+        ---
+        parameters:
+          - name: include_old
+            in: query
+            type: boolean
+            required: false
+        responses:
+          200:
+            schema:
+              type: array
+              items:
+                $ref: "#/definitions/Post"
+
+        """
+        include_old = request.args.get("include_old")
+
+        query = Post.query.filter(Post.is_guideline)
+        if include_old != "true":
+            query = query.filter(Post.superseded_by == None)  # noqa: E711
+        return [serialize_post(post)
+                for post in query.order_by(Post.created_at.desc())]
+
+
+class GuidelineResource(Resource):
+
+    def get(self, id):
+        """
+        Gets a list of all revisions of a guideline.
+        ---
+        parameters:
+          - name: id
+            in: path
+            type: integer
+            required: true
+          - name: reverse
+            in: query
+            type: boolean
+            required: false
+        responses:
+          200:
+            schema:
+              type: array
+              items:
+                $ref: "#/definitions/Post"
+          404:
+            description: Not found
+        """
+
+        post = Post.query.filter(Post.id == id).one_or_none()
+        if post is None or not post.is_guideline:
+            return abort(404)
+
+        d = deque([post])
+
+        while d[0].superseding is not None:
+            post = d[0].superseding
+            d.appendleft(post)
+
+        while d[-1].superseded_by is not None:
+            post = d[-1].superseded_by
+            d.append(post)
+
+        reverse = request.args.get("reverse")
+
+        if reverse == "true":
+            d.reverse()
+
+        return [serialize_post(post)
+                for post in d]
