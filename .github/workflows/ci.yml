@@ -54,7 +54,7 @@ jobs:
 
       - name: Run tests
         env:
-          FLASK_ENV: development
+          JWT_SECRET_KEY: "AoIEq52yRHMgViDzYSuScgoBxwdN1Lcf"
         run: pytest tests -v --full-trace
 
   deploy:
