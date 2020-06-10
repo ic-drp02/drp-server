@@ -66,14 +66,14 @@ def authenticate():
     user = User.query.filter(User.email == email).one_or_none()
 
     if user is None:
-        return error(401)
+        return error(401, type="InvalidCredentials")
 
     hasher = PasswordHasher()
 
     try:
         hasher.verify(user.password_hash, password)
     except VerifyMismatchError:
-        return error(401)
+        return error(401, type="InvalidCredentials")
 
     if hasher.check_needs_rehash(user.password_hash):
         hash = hasher.hash(password)
@@ -81,7 +81,7 @@ def authenticate():
         db.session.commit()
 
     if not user.confirmed:
-        return error(401, "email has not been confirmed")
+        return error(401, type="Unconfirmed")
 
     now = datetime.utcnow()
     expiration_time = now + timedelta(hours=2)
@@ -105,21 +105,25 @@ def register():
     body = request.json
 
     email = body.get("email")
-    if email is None:
-        return error(400, "`email` is required")
+    if not email:
+        return error(400, message="`email` is required")
 
     password = body.get("password")
-    if password is None:
-        return error(400, "`password` is required")
+    if not password:
+        return error(400, message="`password` is required")
 
     email = email.lower()
-    domain = email.split("@")[1]
+    parts = email.split("@")
+    if len(parts) != 2:
+        return error(400, type="InvalidEmail")
+
+    domain = parts[1]
     if domain != "nhs.net" and domain != "ic.ac.uk" \
             and domain != "imperial.ac.uk":
-        return error(400, "unauthorised email address domain: " + domain)
+        return error(400, type="UnauthorisedDomain")
 
     if User.query.filter(User.email == email).one_or_none() is not None:
-        return error(400, "this email address has already been registered")
+        return error(400, type="Registered")
 
     hasher = PasswordHasher()
     hash = hasher.hash(password)
