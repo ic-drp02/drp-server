@@ -8,7 +8,7 @@ from flask_restful import Resource, abort
 
 from .posts import serialize_post
 
-from ..models import Post
+from ..models import Post, Post_Tag, Tag
 
 from ..db import db
 
@@ -76,6 +76,10 @@ class PostSearchResource(Resource):
             in: query
             type: boolean
             required: false
+          - name: tag
+            in: query
+            type: string
+            required: false
         responses:
           200:
             schema:
@@ -90,6 +94,7 @@ class PostSearchResource(Resource):
         results_per_page = request.args.get("results_per_page")
         guidelines_only = request.args.get("guidelines_only")
         include_old = request.args.get("include_old")
+        tag = request.args.get("tag")
 
         ts_query, ts_rank = construct_fulltext_query_and_rank(searched)
 
@@ -100,6 +105,8 @@ class PostSearchResource(Resource):
             query = query.filter(Post.superseded_by == None)  # noqa: E711
         if guidelines_only == "true":
             query = query.filter(Post.is_guideline)
+        if tag is not None:
+            query = query.join(Post_Tag).join(Tag).filter(Tag.name == tag)
         query = query.order_by(text("rank desc"), Post.created_at.desc())
 
         if page is None or results_per_page is None:
