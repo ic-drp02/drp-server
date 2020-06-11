@@ -2,7 +2,7 @@ from flask import Blueprint, request
 from flask_restful import Resource, abort
 
 from ..db import db
-from ..models import Question, Site, Subject, Grade
+from ..models import Question, Site, Subject, Grade, User
 from ..swag import swag
 
 from .site import serialize_site
@@ -60,6 +60,7 @@ def serialize_question(question):
         "subject": serialize_subject(question.subject),
         "text": question.text,
         "resolved": question.resolved,
+        "user": question.user_id,
     }
 
 
@@ -187,6 +188,8 @@ class QuestionListResource(Resource):
             schema:
               type: object
               properties:
+                user:
+                  type: integer
                 site:
                   type: string
                   required: true
@@ -227,6 +230,7 @@ class QuestionListResource(Resource):
         """
         body = request.json
 
+        user = body.get("user")
         site = body.get("site")
         grade = body.get("grade")
         specialty = body.get("specialty")
@@ -243,6 +247,11 @@ class QuestionListResource(Resource):
 
         if questions is None or questions == []:
             return abort(400, message="At least one question must be given.")
+
+        if user is not None:
+            user = User.query.filter(User.id == user).one_or_none()
+            if user is None:
+                return abort(400, message="User does not exist.")
 
         site = Site.query.filter(Site.name == site).one_or_none()
 
@@ -269,7 +278,7 @@ class QuestionListResource(Resource):
 
             question = Question(site=site, grade=Grade[grade.upper()],
                                 specialty=specialty,
-                                subject=subject, text=text)
+                                subject=subject, text=text, user=user)
 
             db.session.add(question)
             qs.append(question)

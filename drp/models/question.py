@@ -43,9 +43,11 @@ class Question(db.Model):
     specialty = db.Column(db.Text)
     subject_id = db.Column(db.Integer, db.ForeignKey("subjects.id"))
     text = db.Column(db.Text)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
 
     site = relationship("Site")
     subject = relationship("Subject")
+    user = relationship("User")
 
     resolved = db.Column(db.Boolean, nullable=False, server_default="false")
 
