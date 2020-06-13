@@ -62,6 +62,9 @@ def create_user():
                      message="`email` and `password` fields"
                      "are required.")
 
+    if len(password) < 8:
+        return error(400, type="ShortPassword")
+
     if role is not None and role != "normal" and role != "admin":
         return error(400, message="`role` must be one of {normal, admin}.")
 
@@ -140,6 +143,9 @@ def update_user_by_id(id):
     role = body.get("role")
 
     if password:
+        if len(password) < 8:
+            return error(400, type="ShortPassword")
+
         hasher = PasswordHasher()
         hash = hasher.hash(password)
         user.password_hash = hash

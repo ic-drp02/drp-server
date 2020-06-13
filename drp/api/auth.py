@@ -124,6 +124,9 @@ def register():
     if len(parts) != 2:
         return error(400, type="InvalidEmail")
 
+    if len(password) < 8:
+        return error(400, type="ShortPassword")
+
     domain = parts[1]
     if domain != "nhs.net" and domain != "ic.ac.uk" \
             and domain != "imperial.ac.uk":
