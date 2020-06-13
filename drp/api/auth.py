@@ -188,68 +188,72 @@ def confirm_registration():
     return render_template("confirm_registration.html")
 
 
-@auth.route("/reset_password", methods=["POST"])
+@auth.route("/reset_password", methods=["GET", "POST"])
 def reset_password():
-    body = request.json
+    if request.method == "GET":
+        return render_template("reset_password.html")
 
-    email = body.get("email")
-    if not email:
-        return error(400, message="`email` is required")
+    elif request.method == "POST":
+        email = request.form.get("email")
+        if not email:
+            return render_template("reset_password.html",
+                                   error="Enter a valid email address.")
 
-    user = User.query.filter(User.email == email).one_or_none()
-    if user is None:
-        return error(404, message="unknown email address")
+        user = User.query.filter(User.email == email).one_or_none()
+        if user is None:
+            return render_template("reset_password.html", success=True)
 
-    token = uuid.uuid4()
+        token = uuid.uuid4()
 
-    user.email_confirmation_token = token
+        user.email_confirmation_token = token
 
-    db.session.commit()
+        db.session.commit()
 
-    url = f"{request.host_url}auth/reset_password/confirm?" + \
-        urlencode({"token": token})
+        url = f"{request.host_url}auth/reset_password/confirm?" + \
+            urlencode({"token": token})
 
-    message = Message("Reset password request: " + email, recipients=[email])
-    message.html = f"<p>Click <a href=\"{url}\">here</a> to reset your \
-        password.</p>"
+        message = Message("Reset password request: " +
+                          email, recipients=[email])
+        message.html = f"<p>Click <a href=\"{url}\">here</a> to reset your \
+            password.</p>"
 
-    mail.send(message)
+        mail.send(message)
 
-    return "", 200
+        return render_template("reset_password.html", success=True)
 
 
 @auth.route("/reset_password/confirm", methods=["GET", "POST"])
 def confirm_reset_password():
     token = request.args.get("token")
     if token is None:
-        return render_template("reset_password.html",
+        return render_template("confirm_reset_password.html",
                                error="Invalid password reset token")
 
     user = User.query.filter(
         User.email_confirmation_token == token).one_or_none()
 
     if user is None:
-        return render_template("reset_password.html",
+        return render_template("confirm_reset_password.html",
                                error="Invalid password reset token")
 
     if request.method == "GET":
-        return render_template("reset_password.html")
+        return render_template("confirm_reset_password.html")
 
     elif request.method == "POST":
         password = request.form.get("password")
         confirm_password = request.form.get("confirm")
 
         if not password:
-            return render_template("reset_password.html",
+            return render_template("confirm_reset_password.html",
                                    error="Password is required")
 
         if len(password) < 8:
-            return render_template("reset_password.html",
+            return render_template("confirm_reset_password.html",
                                    error="Password must contain at least 8 \
                                        characters")
 
         if password != confirm_password:
-            return render_template("reset_password.html",
+            return render_template("confirm_reset_password.html",
                                    error="Passwords don't match")
 
         hasher = PasswordHasher()
@@ -260,4 +264,4 @@ def confirm_reset_password():
 
         db.session.commit()
 
-        return render_template("reset_password.html", success=True)
+        return render_template("confirm_reset_password.html", success=True)
