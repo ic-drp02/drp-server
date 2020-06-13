@@ -9,14 +9,14 @@ from argon2.exceptions import VerifyMismatchError
 from jwt import encode
 from datetime import datetime, timedelta
 
-from .. import config
-from ..db import db
-from ..models import User, UserRole
-from ..mail import mail
-from ..swag import swag
+from . import config
+from .db import db
+from .models import User, UserRole
+from .mail import mail
+from .swag import swag
 
-from .users import serialize_role
-from .utils import error
+from .api.users import serialize_role
+from .api.utils import error
 
 auth = Blueprint("auth", __name__)
 
@@ -201,7 +201,8 @@ def reset_password():
 
         user = User.query.filter(User.email == email).one_or_none()
         if user is None:
-            return render_template("reset_password.html", success=True)
+            return render_template("reset_password.html",
+                                   error="Unrecognised email address")
 
         token = uuid.uuid4()
 
