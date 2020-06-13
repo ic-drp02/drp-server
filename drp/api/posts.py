@@ -115,6 +115,9 @@ class PostResource(Resource):
 
             db.session.delete(file)
 
+        if post.superseding is not None and post.superseded_by is not None:
+            post.superseded_by.superseding = post.superseding
+
         db.session.delete(post)
         db.session.commit()
 
