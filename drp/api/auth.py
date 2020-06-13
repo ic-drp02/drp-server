@@ -1,7 +1,7 @@
 import uuid
 from urllib.parse import urlencode
 
-from flask import Blueprint, request
+from flask import Blueprint, request, render_template
 from flask_mail import Message
 
 from argon2 import PasswordHasher
@@ -160,22 +160,104 @@ def register():
 @auth.route("/register/confirm")
 def confirm_registration():
     token = request.args.get("token")
+
+    error_message = "Invalid registration token. Make sure \
+        you have registered for an account in the \
+            ICON app."
+
     if token is None:
-        return error(400, "missing `token` query parameter")
+        return render_template("confirm_registration.html",
+                               error=error_message)
 
     user = User.query.filter(
         User.email_confirmation_token == token).one_or_none()
 
     if user is None:
-        return "Invalid registration token. Please ensure you have " \
-            "registered for an account in the ICON app.", 400
+        return render_template("confirm_registration.html",
+                               error=error_message)
 
     if user.confirmed:
-        return "This email has already been confirmed.", 400
+        return render_template("confirm_registration.html",
+                               error="This email has already been registered.")
 
     user.confirmed = True
+    user.email_confirmation_token = None
 
     db.session.commit()
 
-    return "Thanks for confirming your email. You should now be able to " \
-        "login to the app."
+    return render_template("confirm_registration.html")
+
+
+@auth.route("/reset_password", methods=["POST"])
+def reset_password():
+    body = request.json
+
+    email = body.get("email")
+    if not email:
+        return error(400, message="`email` is required")
+
+    user = User.query.filter(User.email == email).one_or_none()
+    if user is None:
+        return error(404, message="unknown email address")
+
+    token = uuid.uuid4()
+
+    user.email_confirmation_token = token
+
+    db.session.commit()
+
+    url = f"{request.host_url}auth/reset_password/confirm?" + \
+        urlencode({"token": token})
+
+    message = Message("Reset password request: " + email, recipients=[email])
+    message.html = f"<p>Click <a href=\"{url}\">here</a> to reset your \
+        password.</p>"
+
+    mail.send(message)
+
+    return "", 200
+
+
+@auth.route("/reset_password/confirm", methods=["GET", "POST"])
+def confirm_reset_password():
+    token = request.args.get("token")
+    if token is None:
+        return render_template("reset_password.html",
+                               error="Invalid password reset token")
+
+    user = User.query.filter(
+        User.email_confirmation_token == token).one_or_none()
+
+    if user is None:
+        return render_template("reset_password.html",
+                               error="Invalid password reset token")
+
+    if request.method == "GET":
+        return render_template("reset_password.html")
+
+    elif request.method == "POST":
+        password = request.form.get("password")
+        confirm_password = request.form.get("confirm")
+
+        if not password:
+            return render_template("reset_password.html",
+                                   error="Password is required")
+
+        if len(password) < 8:
+            return render_template("reset_password.html",
+                                   error="Password must contain at least 8 \
+                                       characters")
+
+        if password != confirm_password:
+            return render_template("reset_password.html",
+                                   error="Passwords don't match")
+
+        hasher = PasswordHasher()
+        hash = hasher.hash(password)
+
+        user.password_hash = hash
+        user.email_confirmation_token = None
+
+        db.session.commit()
+
+        return render_template("reset_password.html", success=True)
