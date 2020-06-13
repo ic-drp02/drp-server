@@ -19,6 +19,37 @@ from .tags import serialize_tag
 from .files import serialize_file, allowed_file
 
 
+def get_revisions(post):
+    d = deque([post])
+
+    while d[0].superseding is not None:
+        post = d[0].superseding
+        d.appendleft(post)
+
+    while d[-1].superseded_by is not None:
+        post = d[-1].superseded_by
+        d.append(post)
+
+    return d
+
+
+def delete_post(post):
+    for file in post.files:
+        try:
+            os.remove(os.path.join(
+                current_app.config['UPLOAD_FOLDER'], file.filename))
+        except OSError as e:
+            print("Could not delete file, " + repr(e))
+
+        db.session.delete(file)
+
+    if post.superseding is not None and post.superseded_by is not None:
+        post.superseded_by.superseding = post.superseding
+
+    db.session.delete(post)
+    db.session.commit()
+
+
 @swag.definition("Post")
 def serialize_post(post):
     """
@@ -106,20 +137,7 @@ class PostResource(Resource):
         if post is None:
             return abort(404)
 
-        for file in post.files:
-            try:
-                os.remove(os.path.join(
-                    current_app.config['UPLOAD_FOLDER'], file.filename))
-            except OSError as e:
-                print("Could not delete file, " + repr(e))
-
-            db.session.delete(file)
-
-        if post.superseding is not None and post.superseded_by is not None:
-            post.superseded_by.superseding = post.superseding
-
-        db.session.delete(post)
-        db.session.commit()
+        delete_post(post)
 
         return "", 204
 
@@ -356,15 +374,7 @@ class GuidelineResource(Resource):
         if post is None or not post.is_guideline:
             return abort(404)
 
-        d = deque([post])
-
-        while d[0].superseding is not None:
-            post = d[0].superseding
-            d.appendleft(post)
-
-        while d[-1].superseded_by is not None:
-            post = d[-1].superseded_by
-            d.append(post)
+        d = get_revisions(post)
 
         reverse = request.args.get("reverse")
 
@@ -373,3 +383,32 @@ class GuidelineResource(Resource):
 
         return [serialize_post(post)
                 for post in d]
+
+    def delete(self, id):
+        """
+        Deletes all revisions of a guideline by id.
+        ---
+        parameters:
+          - name: id
+            in: path
+            type: integer
+            required: true
+        responses:
+          204:
+            description: Success
+          404:
+            description: Not found
+        """
+        post = Post.query.filter(Post.id == id).one_or_none()
+
+        if post is None:
+            return abort(404)
+
+        d = get_revisions(post)
+
+        for post in d:
+            delete_post(post)
+
+        delete_post(post)
+
+        return "", 204
