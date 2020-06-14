@@ -8,8 +8,6 @@ from datetime import datetime
 from flask import request, current_app
 from flask_restful import Resource, abort
 
-from collections import deque
-
 from ..db import db
 from ..models import Post, Post_Tag, Tag, File
 from ..swag import swag
@@ -17,20 +15,6 @@ from ..swag import swag
 from .. import notifications
 from .tags import serialize_tag
 from .files import serialize_file, allowed_file
-
-
-def get_revisions(post):
-    d = deque([post])
-
-    while d[0].superseding is not None:
-        post = d[0].superseding
-        d.appendleft(post)
-
-    while d[-1].superseded_by is not None:
-        post = d[-1].superseded_by
-        d.append(post)
-
-    return d
 
 
 def delete_post(post):
@@ -43,11 +27,12 @@ def delete_post(post):
 
         db.session.delete(file)
 
-    if post.superseding is not None and post.superseded_by is not None:
-        post.superseded_by.superseding = post.superseding
-
     db.session.delete(post)
-    db.session.commit()
+
+
+def get_current_post_by_id(id):
+    return Post.query.filter(Post.is_current & (Post.post_id == id)) \
+        .one_or_none()
 
 
 @swag.definition("Post")
@@ -76,10 +61,10 @@ def serialize_post(post):
           $ref: "#/definitions/File"
       is_guideline:
         type: boolean
-      superseding:
+      is_current:
+        type: boolean
+      post_id:
         type: integer
-      superseded_by:
-        type:integer
     """
     return {
         "id": post.id,
@@ -87,9 +72,8 @@ def serialize_post(post):
         "summary": post.summary,
         "content": post.content,
         "is_guideline": post.is_guideline,
-        "superseding": post.superseding_id,
-        "superseded_by": post.superseded_by.id
-        if post.superseded_by is not None else None,
+        "is_current": post.is_current,
+        "post_id": post.post_id,
         "created_at": post.created_at.astimezone(pytz.utc).isoformat(),
         "tags": [serialize_tag(tag) for tag in post.tags],
         "files": [serialize_file(file) for file in post.files]
@@ -114,7 +98,7 @@ class PostResource(Resource):
           404:
             description: Not found
         """
-        post = Post.query.filter(Post.id == id).one_or_none()
+        post = get_current_post_by_id(id)
         return serialize_post(post) if post is not None else abort(404)
 
     def delete(self, id):
@@ -132,12 +116,13 @@ class PostResource(Resource):
           404:
             description: Not found
         """
-        post = Post.query.filter(Post.id == id).one_or_none()
+        post = get_current_post_by_id(id)
 
         if post is None:
             return abort(404)
 
         delete_post(post)
+        db.session.commit()
 
         return "", 204
 
@@ -194,7 +179,7 @@ class PostListResource(Resource):
         if guidelines_only == "true":
             query = query.filter(Post.is_guideline)
         if include_old != "true":
-            query = query.filter(Post.superseded_by == None)  # noqa: E711
+            query = query.filter(Post.is_current)
         if tag is not None:
             query = query.join(Post_Tag).join(Tag).filter(Tag.name == tag)
 
@@ -251,8 +236,8 @@ class PostListResource(Resource):
             description: Indicates whether a post is a guideline.
           - in: formData
             type: integer
-            name: superseding
-            description: ID of older version of the guideline.
+            name: updates
+            description: ID of the post that is to be updated.
         responses:
           200:
             schema:
@@ -265,7 +250,7 @@ class PostListResource(Resource):
         files = request.files.getlist('files')
         names = request.form.getlist('names')
         is_guideline = request.form.get('is_guideline')
-        superseding = request.form.get('superseding')
+        updates = request.form.get('updates')
 
         # Check that required fields are present
         if title is None or summary is None or content is None:
@@ -319,22 +304,16 @@ class PostListResource(Resource):
             return abort(400, message="The value is_guideline="
                          f"{is_guideline} is invalid.")
 
-        if is_guideline == "true" and superseding is not None:
-            old_post = Post.query.filter(Post.id == superseding) \
-                .one_or_none()
-            if old_post is None:
-                return abort(400, message="Invalid old post ID.")
-            if old_post.superseded_by is not None:
-                return abort(400, message="Selected old post has already "
-                             "been superseded.")
+        if is_guideline == "true" and updates is not None:
+            old_post = get_current_post_by_id(updates)
+            if old_post is None or not old_post.is_guideline:
+                return abort(400, message="Invalid updated post ID.")
             post = Post(title=title, summary=summary, content=content,
-                        is_guideline=True, superseding=old_post, tags=tags)
-        elif is_guideline == "true":
-            post = Post(title=title, summary=summary, content=content,
-                        is_guideline=True, tags=tags)
+                        is_guideline=True, post_id=updates, tags=tags)
+            old_post.is_current = False
         else:
             post = Post(title=title, summary=summary, content=content,
-                        is_guideline=False, tags=tags)
+                        is_guideline=(is_guideline == "true"), tags=tags)
         db.session.add(post)
 
         # Save files
@@ -390,20 +369,20 @@ class GuidelineResource(Resource):
           404:
             description: Not found
         """
-
-        post = Post.query.filter(Post.id == id).one_or_none()
-        if post is None or not post.is_guideline:
-            return abort(404)
-
-        d = get_revisions(post)
-
         reverse = request.args.get("reverse")
+        query = Post.query.filter(Post.post_id == id)
 
         if reverse == "true":
-            d.reverse()
+            query = query.order_by(Post.post_id.desc())
+        else:
+            query = query.order_by(Post.post_id)
 
-        return [serialize_post(post)
-                for post in d]
+        posts = query.all()
+
+        if len(posts) == 0:
+            return abort(404)
+
+        return [serialize_post(post) for post in posts]
 
     def delete(self, id):
         """
@@ -420,16 +399,11 @@ class GuidelineResource(Resource):
           404:
             description: Not found
         """
-        post = Post.query.filter(Post.id == id).one_or_none()
+        posts = Post.query.filter(Post.post_id == id).all()
 
-        if post is None:
-            return abort(404)
-
-        d = get_revisions(post)
-
-        for post in d:
+        for post in posts:
             delete_post(post)
 
-        delete_post(post)
+        db.session.commit()
 
         return "", 204

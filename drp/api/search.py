@@ -102,7 +102,7 @@ class PostSearchResource(Resource):
         query = db.session.query(Post, ts_rank) \
             .filter(Post.__ts_vector__.op('@@')(ts_query))
         if (include_old != "true"):
-            query = query.filter(Post.superseded_by == None)  # noqa: E711
+            query = query.filter(Post.is_current)
         if guidelines_only == "true":
             query = query.filter(Post.is_guideline)
         if tag is not None:

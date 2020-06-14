@@ -1,3 +1,4 @@
+from sqlalchemy.schema import Sequence
 from sqlalchemy.sql import func
 from sqlalchemy.sql.expression import cast
 from sqlalchemy.orm import relationship
@@ -19,15 +20,15 @@ def create_tsvector(*components):
 class Post(db.Model):
     __tablename__ = "posts"
 
+    post_id_seq = Sequence('post_id_seq')
+
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(120), nullable=False)
     summary = db.Column(db.String(200))
     content = db.Column(db.Text())
     is_guideline = db.Column(db.Boolean())
-    superseding_id = db.Column(db.Integer, db.ForeignKey('posts.id'))
-    superseding = relationship(
-        'Post', uselist=False, remote_side=[id],
-        backref=db.backref('superseded_by', uselist=False))
+    is_current = db.Column(db.Boolean(), default=True)
+    post_id = db.Column(db.Integer, server_default=post_id_seq.next_value())
 
     created_at = db.Column(db.DateTime(timezone=True), nullable=False,
                            server_default=func.now())
@@ -47,6 +48,11 @@ class Post(db.Model):
             'idx_post_fulltextsearch',
             __ts_vector__,
             postgresql_using='gin'
+        ),
+        db.Index(
+            'unique_current_post_id', post_id, is_current,
+            unique=True,
+            postgresql_where=is_current
         ),
     )
 
