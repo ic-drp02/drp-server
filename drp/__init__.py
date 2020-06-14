@@ -20,7 +20,7 @@ def init_api(app):
 
     api.add_resource(res.PostResource, "/api/posts/<int:id>")
     api.add_resource(res.PostListResource, "/api/posts")
-    api.add_resource(res.GuidelineResource, "/api/guidelines/<int:id>")
+    api.add_resource(res.RevisionResource, "/api/revisions/<int:id>")
 
     api.add_resource(res.PostSearchResource,
                      "/api/search/posts/<string:searched>")

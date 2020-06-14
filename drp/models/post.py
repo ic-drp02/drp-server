@@ -20,7 +20,7 @@ def create_tsvector(*components):
 class Post(db.Model):
     __tablename__ = "posts"
 
-    post_id_seq = Sequence('post_id_seq')
+    post_id_seq = Sequence('post_id_seq', metadata=db.Model.metadata)
 
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(120), nullable=False)

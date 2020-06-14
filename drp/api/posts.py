@@ -345,11 +345,11 @@ class PostListResource(Resource):
         return serialize_post(post)
 
 
-class GuidelineResource(Resource):
+class RevisionResource(Resource):
 
     def get(self, id):
         """
-        Gets a list of all revisions of a guideline.
+        Gets a list of all revisions of a post.
         ---
         parameters:
           - name: id
@@ -386,7 +386,7 @@ class GuidelineResource(Resource):
 
     def delete(self, id):
         """
-        Deletes all revisions of a guideline by id.
+        Deletes all revisions of a post by id.
         ---
         parameters:
           - name: id
