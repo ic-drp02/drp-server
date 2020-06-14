@@ -85,6 +85,46 @@ def test_create_post(app, db):
         assert "created_at" in data
 
 
+def test_update_post(app, db):
+    with app.test_client() as client:
+        post = {
+            "title": "A title",
+            "summary": "",
+            "content": "",
+            "is_guideline": "true"
+        }
+
+        response = client.post('/api/posts',
+                               content_type='multipart/form-data',
+                               data=post)
+
+        assert "200" in response.status
+
+        data = json.loads(response.data.decode("utf-8"))
+
+        id = data["post_id"]
+
+        update = {
+            "title": "A new title",
+            "summary": "",
+            "content": "",
+            "is_guideline": "true",
+            "updates": str(id)
+        }
+
+        response = client.post('/api/posts',
+                               content_type='multipart/form-data',
+                               data=update)
+
+        data = json.loads(response.data.decode("utf-8"))
+
+        assert "200" in response.status
+
+        data = json.loads(response.data.decode("utf-8"))
+
+        assert id == data["post_id"]
+
+
 def test_create_post_with_missing_content(app, db):
     with app.test_client() as client:
         post = {
