@@ -22,7 +22,7 @@ auth = Blueprint("auth", __name__)
 
 
 @swag.definition("TokenResponse")
-def token_response(id, token, role):
+def token_response(id, token, role, expires):
     """
     A response containing a jwt token for authentication with the api.
     ---
@@ -33,11 +33,14 @@ def token_response(id, token, role):
         type: string
       role:
         type: string
+      expires:
+        type: integer
     """
     return {
         "id": id,
         "token": token,
         "role": serialize_role(role),
+        "expires": expires,
     }
 
 
@@ -104,7 +107,10 @@ def authenticate():
 
     token = encode(claims, config.JWT_SECRET_KEY, algorithm="HS256")
 
-    return token_response(user.id, token.decode("utf-8"), user.role)
+    return token_response(user.id,
+                          token.decode("utf-8"),
+                          user.role,
+                          int(expiration_time.strftime("%s")))
 
 
 @auth.route("/register", methods=["POST"])
