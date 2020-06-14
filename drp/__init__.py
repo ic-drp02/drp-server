@@ -11,6 +11,8 @@ def init_cli(app):
     from . import cli
     with app.app_context():
         app.cli.add_command(cli.seed)
+        app.cli.add_command(cli.create_user)
+        app.cli.add_command(cli.delete_user)
 
 
 def init_api(app):

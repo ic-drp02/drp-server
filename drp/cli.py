@@ -4,7 +4,7 @@ import flask_migrate
 from flask.cli import with_appcontext
 
 from .db import db
-from .models import Tag, Post, Site, Subject, Grade, Question
+from .models import Tag, Post, Site, Subject, Grade, Question, User, UserRole
 
 
 @click.command("seed", help="Seed the database with data from a json file.")
@@ -61,3 +61,38 @@ def seed(filename, drop_all):
         db.session.add_all(questions)
 
     db.session.commit()
+
+
+@click.command("create_user", help="Create a new user.")
+@click.argument("email")
+@click.argument("password")
+@click.option("-r", "--role",
+              type=click.Choice(["normal", "admin"], case_sensitive=False),
+              default="normal")
+@with_appcontext
+def create_user(email, password, role):
+    from argon2 import PasswordHasher
+
+    hasher = PasswordHasher()
+    hash = hasher.hash(password)
+
+    user = User(email=email, password_hash=hash,
+                role=UserRole.ADMIN if role == "admin" else UserRole.NORMAL,
+                confirmed=True)
+
+    db.session.add(user)
+    db.session.commit()
+
+
+@click.command("delete_user", help="Delete a user.")
+@click.argument("email")
+@with_appcontext
+def delete_user(email):
+    user = User.query.filter(User.email == email).one_or_none()
+
+    if not user:
+        print("Not found")
+
+    else:
+        db.session.delete(user)
+        db.session.commit()
