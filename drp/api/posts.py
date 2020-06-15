@@ -407,3 +407,35 @@ class RevisionResource(Resource):
         db.session.commit()
 
         return "", 204
+
+
+class PostFetchResource(Resource):
+
+    def get(self):
+        """
+        Returns a list of posts identified by the supplied IDs.
+        ---
+        parameters:
+          - name: ids
+            in: query
+            type: array
+            items:
+              type: number
+            required: true
+        responses:
+          200:
+            schema:
+              type: array
+              items:
+                $ref: "#/definitions/Post"
+          404:
+            description: Not found
+        """
+        ids = request.args.getlist("ids")
+        if len(ids) == 1 and ',' in ids[0]:
+            ids = ids[0].split(',')
+
+        posts = Post.query.filter(
+            Post.is_current & Post.post_id.in_(ids)).all()
+
+        return [serialize_post(post) for post in posts]
