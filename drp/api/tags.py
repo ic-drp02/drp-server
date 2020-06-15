@@ -115,7 +115,7 @@ class TagListResource(Resource):
               items:
                 $ref: "#/definitions/Tag"
         """
-        return [serialize_tag(tag) for tag in Tag.query.all()]
+        return [serialize_tag(tag) for tag in Tag.query.order_by(Tag.name)]
 
     def post(self):
         """
