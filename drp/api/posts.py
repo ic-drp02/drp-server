@@ -63,17 +63,17 @@ def serialize_post(post):
         type: boolean
       is_current:
         type: boolean
-      post_id:
+      revision_id:
         type: integer
     """
     return {
-        "id": post.id,
+        "id": post.post_id,
         "title": post.title,
         "summary": post.summary,
         "content": post.content,
         "is_guideline": post.is_guideline,
         "is_current": post.is_current,
-        "post_id": post.post_id,
+        "revision_id": post.id,
         "created_at": post.created_at.astimezone(pytz.utc).isoformat(),
         "tags": [serialize_tag(tag) for tag in post.tags],
         "files": [serialize_file(file) for file in post.files]

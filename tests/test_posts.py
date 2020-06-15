@@ -102,7 +102,7 @@ def test_update_post(app, db):
 
         data = json.loads(response.data.decode("utf-8"))
 
-        id = data["post_id"]
+        id = data["id"]
 
         update = {
             "title": "A new title",
@@ -122,7 +122,7 @@ def test_update_post(app, db):
 
         data = json.loads(response.data.decode("utf-8"))
 
-        assert id == data["post_id"]
+        assert id == data["id"]
 
 
 def test_create_post_with_missing_content(app, db):
