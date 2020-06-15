@@ -161,6 +161,12 @@ class PostListResource(Resource):
             in: query
             type: string
             required: false
+          - name: page
+            in: query
+            type: integer
+          - name: per_page
+            in: query
+            type: integer
         responses:
           200:
             schema:
@@ -173,6 +179,16 @@ class PostListResource(Resource):
         include_old = request.args.get("include_old")
         tag = request.args.get("tag")
 
+        page = request.args.get("page")
+        if page is None:
+            page = 0
+        else:
+            page = int(page)
+
+        per_page = request.args.get("per_page")
+        if per_page is not None:
+            per_page = int(per_page)
+
         query = Post.query
 
         if guidelines_only == "true":
@@ -181,8 +197,13 @@ class PostListResource(Resource):
             query = query.filter(Post.superseded_by == None)  # noqa: E711
         if tag is not None:
             query = query.join(Post_Tag).join(Tag).filter(Tag.name == tag)
-        return [serialize_post(post)
-                for post in query.order_by(Post.created_at.desc())]
+
+        query = query.order_by(Post.created_at.desc())
+
+        if per_page is not None:
+            query = query.limit(per_page).offset(page * per_page)
+
+        return [serialize_post(post) for post in query]
 
     def post(self):
         """
