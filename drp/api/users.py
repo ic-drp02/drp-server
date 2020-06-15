@@ -46,7 +46,7 @@ def index():
 
 
 def get_all_users():
-    users = User.query.all()
+    users = User.query.order_by(User.email)
     return jsonify([serialize_user(user) for user in users])
 
 
