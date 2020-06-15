@@ -38,7 +38,7 @@ def get_current_post_by_id(id):
 @swag.definition("Post")
 def serialize_post(post):
     """
-    Represents a post.
+    Represents a post revision.
     ---
     properties:
       id:
@@ -91,19 +91,46 @@ class PostResource(Resource):
             in: path
             type: integer
             required: true
+          - name: include_old
+            in: query
+            type: boolean
+            required: false
+          - name: reverse
+            in: query
+            type: boolean
+            required: false
         responses:
           200:
             schema:
-              $ref: "#/definitions/Post"
+              type: array
+              items:
+                $ref: "#/definitions/Post"
           404:
             description: Not found
         """
-        post = get_current_post_by_id(id)
-        return serialize_post(post) if post is not None else abort(404)
+        include_old = request.args.get("include_old")
+        reverse = request.args.get("reverse")
+
+        query = Post.query.filter(Post.post_id == id)
+
+        if include_old != "true":
+            query = query.filter(Post.is_current)
+
+        if reverse == "true":
+            query = query.order_by(Post.id.desc())
+        else:
+            query = query.order_by(Post.id)
+
+        posts = query.all()
+
+        if len(posts) == 0:
+            return abort(404)
+
+        return [serialize_post(post) for post in posts]
 
     def delete(self, id):
         """
-        Deletes a single post by id.
+        Deletes all revisions of a post by ID.
         ---
         parameters:
           - name: id
@@ -116,12 +143,14 @@ class PostResource(Resource):
           404:
             description: Not found
         """
-        post = get_current_post_by_id(id)
+        revisions = Post.query.filter(Post.post_id == id).all()
 
-        if post is None:
+        if len(revisions) == 0:
             return abort(404)
 
-        delete_post(post)
+        for revision in revisions:
+            delete_post(revision)
+
         db.session.commit()
 
         return "", 204
@@ -349,44 +378,30 @@ class RevisionResource(Resource):
 
     def get(self, id):
         """
-        Gets a list of all revisions of a post.
+        Gets a single revision by ID.
         ---
         parameters:
           - name: id
             in: path
             type: integer
             required: true
-          - name: reverse
-            in: query
-            type: boolean
-            required: false
         responses:
           200:
             schema:
-              type: array
-              items:
-                $ref: "#/definitions/Post"
+              $ref: "#/definitions/Post"
           404:
             description: Not found
         """
-        reverse = request.args.get("reverse")
-        query = Post.query.filter(Post.post_id == id)
+        revision = Post.query.filter(Post.id == id).one_or_none()
 
-        if reverse == "true":
-            query = query.order_by(Post.post_id.desc())
-        else:
-            query = query.order_by(Post.post_id)
-
-        posts = query.all()
-
-        if len(posts) == 0:
+        if revision is None:
             return abort(404)
 
-        return [serialize_post(post) for post in posts]
+        return serialize_post(revision)
 
     def delete(self, id):
         """
-        Deletes all revisions of a post by id.
+        Deletes a revision of a post by ID.
         ---
         parameters:
           - name: id
@@ -399,10 +414,20 @@ class RevisionResource(Resource):
           404:
             description: Not found
         """
-        posts = Post.query.filter(Post.post_id == id).all()
+        revision = Post.query.filter(Post.id == id).one_or_none()
 
-        for post in posts:
-            delete_post(post)
+        if revision is None:
+            return abort(404)
+
+        delete_post(revision)
+
+        if revision.is_current:
+            revisions = Post.query.filter(
+                Post.post_id == revision.post_id) \
+                .order_by(Post.id.desc()).all()
+            if len(revisions) > 0:
+                newest = revisions[0]
+                newest.is_current = True
 
         db.session.commit()
 

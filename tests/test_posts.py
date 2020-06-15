@@ -123,6 +123,7 @@ def test_update_post(app, db):
         data = json.loads(response.data.decode("utf-8"))
 
         assert id == data["id"]
+        assert update["title"] == data["title"]
 
 
 def test_create_post_with_missing_content(app, db):
@@ -337,7 +338,11 @@ def test_get_single_post(app, db):
 
         assert "200" in response.status
 
-        post = json.loads(response.data.decode("utf-8"))
+        posts = json.loads(response.data.decode("utf-8"))
+
+        assert len(posts) == 1
+
+        post = posts[0]
 
         assert post["title"] == title
         assert post["summary"] == summary
@@ -367,6 +372,44 @@ def test_delete_post(app, db):
 
     with app.app_context():
         assert Post.query.count() == 0
+
+
+def test_delete_last_revision(app, db):
+    title_old = "A title"
+    title_new = "A new title"
+    summary = "A short summary"
+    content = "A few paragraphs of content..."
+
+    with app.app_context():
+        old = Post(title=title_old, summary=summary,
+                   content=content, is_guideline=True)
+        db.session.add(old)
+        db.session.commit()
+        id = old.post_id
+        new = Post(title=title_new, summary=summary,
+                   content=content, is_guideline=True, post_id=id)
+        old.is_current = False
+        db.session.add(new)
+        db.session.commit()
+        revision_id = new.id
+
+    with app.test_client() as client:
+        response = client.delete(f"/api/revisions/{revision_id}")
+        assert "204" in response.status
+
+        response = client.get(f"/api/posts/{id}")
+
+        assert "200" in response.status
+
+        data = json.loads(response.data.decode("utf-8"))
+
+        assert len(data) == 1
+
+        post = data[0]
+
+        assert post["is_current"]
+        assert post["title"] == title_old
+        assert post["id"] == id
 
 
 def test_delete_post_with_file(app, db):
@@ -446,7 +489,7 @@ def test_timezone_utc(app, db):
 
         assert "200" in response.status
 
-        post = json.loads(response.data.decode("utf-8"))
+        post = json.loads(response.data.decode("utf-8"))[0]
 
         from datetime import datetime, timedelta
 
