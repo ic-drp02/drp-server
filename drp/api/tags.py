@@ -60,9 +60,6 @@ class TagResource(Resource):
             return abort(404)
 
         if name is not None:
-            if len(name) > 30:
-                return abort(400, message="`name` must not be more than 30"
-                             " characters.")
             tag.name = name
 
         try:
@@ -142,10 +139,6 @@ class TagListResource(Resource):
 
         if name is None:
             return abort(400, message="`name` field is required.")
-
-        if len(name) > 30:
-            return abort(400, message="`name` must not be more than 30"
-                         " characters.")
 
         tag = Tag(name=name)
 

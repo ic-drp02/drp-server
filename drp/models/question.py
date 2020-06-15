@@ -43,7 +43,8 @@ class Question(db.Model):
     specialty = db.Column(db.Text)
     subject_id = db.Column(db.Integer, db.ForeignKey("subjects.id"))
     text = db.Column(db.Text)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+    user_id = db.Column(db.Integer, db.ForeignKey(
+        "users.id", name="questions_user_id_fkey", ondelete="SET NULL"))
 
     site = relationship("Site")
     subject = relationship("Subject")
