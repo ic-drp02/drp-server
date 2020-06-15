@@ -7,7 +7,7 @@ from flask_mail import Message
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 from jwt import encode
-from datetime import datetime, timedelta
+import time
 
 from .. import config
 from ..db import db
@@ -99,12 +99,12 @@ def authenticate():
     if not user.confirmed:
         return error(401, type="Unconfirmed")
 
-    now = datetime.utcnow()
-    expiration_time = now + timedelta(hours=2)
+    now = time.time()
+    expiration_time = now + 2 * 60 * 60
 
     claims = {
-        "iat": now.strftime("%s"),
-        "exp": expiration_time.strftime("%s"),
+        "iat": int(now),
+        "exp": int(expiration_time),
         "iss": config.JWT_ISSUER,
         "aud": config.JWT_AUDIENCE,
         "sub": email,
@@ -116,7 +116,7 @@ def authenticate():
     return token_response(user.id,
                           token.decode("utf-8"),
                           user.role,
-                          int(expiration_time.strftime("%s")))
+                          int(expiration_time))
 
 
 @auth.route("/register", methods=["POST"])
