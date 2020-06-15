@@ -51,17 +51,23 @@ def authenticate():
     an authentication token for subsequent use with the api.
     ---
     parameters:
-        - in: body
-          name: credentials
-          schema:
-              type: object
-              properties:
+      - in: body
+        name: credentials
+        schema:
+            type: object
+            properties:
               email:
                   type: string
                   required: true
               password:
                   type: string
                   required: true
+    responses:
+      200:
+        schema:
+          $ref: "#/definitions/Post"
+      401:
+        description: Unauthorized
     """
     body = request.json
 
