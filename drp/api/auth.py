@@ -1,7 +1,7 @@
 import uuid
 from urllib.parse import urlencode
 
-from flask import Blueprint, request, render_template
+from flask import Blueprint, request, render_template, redirect
 from flask_mail import Message
 
 from argon2 import PasswordHasher
@@ -276,4 +276,4 @@ def confirm_reset_password():
 
         db.session.commit()
 
-        return render_template("confirm_reset_password.html", success=True)
+        return redirect("https://icon.doc.ic.ac.uk")
