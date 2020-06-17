@@ -67,7 +67,8 @@ def serialize_question(question):
         "specialty": question.specialty,
         "subject": serialize_subject(question.subject),
         "text": question.text,
-        "resolved_by": serialize_post(question.resolved_by),
+        "resolved_by": serialize_post(question.resolved_by)
+        if question.resolved_by is not None else None,
         "user": question.user_id,
     }
 
