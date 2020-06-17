@@ -52,7 +52,5 @@ class Question(db.Model):
     user = relationship("User")
     resolved_by = relationship("Post", back_populates="resolves")
 
-    resolved = db.Column(db.Boolean, nullable=False, server_default="false")
-
     def __repr__(self):
         return f"<Question '{self.text}'>"
