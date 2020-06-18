@@ -2,7 +2,7 @@ from flask import Blueprint, request
 from sqlalchemy.exc import IntegrityError
 
 from ..db import db
-from ..models import Device
+from ..models import Device, User
 
 from .utils import error
 
@@ -12,11 +12,16 @@ notifications = Blueprint("notifications", __name__)
 @notifications.route("/register", methods=["POST"])
 def register():
     token = request.args.get("token")
+    user = request.args.get("user")
 
     if not token:
         return error(400, "Missing `token` query parameter")
 
-    device = Device(expo_push_token=token)
+    user = User.query.filter(User.id == user).one_or_none()
+    if not user:
+        return error(400, "Missing `user` query parameter")
+
+    device = Device(expo_push_token=token, user=user)
 
     db.session.add(device)
 

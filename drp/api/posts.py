@@ -398,6 +398,12 @@ class PostListResource(Resource):
 
         db.session.commit()
 
+        if len(resolved_questions) > 0:
+            for q in resolved_questions:
+                notifications.send_user(
+                    q.user, "Your question has been resolved",
+                    q.text, data={"id": post.id, "resolves": q.id})
+
         notifications.broadcast(title, summary, data={"id": post.id})
 
         return serialize_post(post)

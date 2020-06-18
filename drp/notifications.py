@@ -35,3 +35,30 @@ def broadcast(title: str, body: str, data):
 
         # Send notification to expo
         requests.post(EXPO_NOTIFICATION_URL, headers=headers, data=body)
+
+
+def send_user(user, title: str, body: str, data):
+    headers = {
+        "accept": "application/json",
+        "accept-encoding": "gzip, deflate",
+        "content-type": "application/json",
+        "content-encoding": "gzip"
+    }
+
+    devices = Device.query.filter(Device.user_id == user.id).all()
+
+    for d in devices:
+        print(f"Notifying {d.expo_push_token}")
+
+    for chunk in chunks(devices, 100):
+        # Generate message for each target device
+        messages = [{"to": device.expo_push_token,
+                     "sound": "default", "title": title, "body": body,
+                     "data": data}
+                    for device in chunk]
+
+        # Compress request body to reduce overhead with many registered devices
+        body = gzip.compress(json.dumps(messages).encode("utf-8"))
+
+        # Send notification to expo
+        requests.post(EXPO_NOTIFICATION_URL, headers=headers, data=body)
