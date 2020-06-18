@@ -30,6 +30,16 @@ def delete_post(post):
     db.session.delete(post)
 
 
+def migrate_resolved_questions(questions, revision):
+    for question in questions:
+        question.resolved_by = revision
+
+
+def unresolve_all(questions):
+    for question in questions:
+        question.resolved = False
+
+
 def get_current_post_by_id(id):
     return Post.query.filter(Post.is_current & (Post.post_id == id)) \
         .one_or_none()
@@ -150,6 +160,8 @@ class PostResource(Resource):
 
         for revision in revisions:
             delete_post(revision)
+            #  Mark associated questions as unresolved
+            unresolve_all(revision.resolves)
 
         db.session.commit()
 
@@ -365,9 +377,12 @@ class PostListResource(Resource):
             post = Post(title=title, summary=summary, content=content,
                         is_guideline=True, post_id=updates, tags=tags)
             old_post.is_current = False
+            migrate_resolved_questions(old_post.resolves, post)
         else:
             post = Post(title=title, summary=summary, content=content,
                         is_guideline=(is_guideline == "true"), tags=tags)
+
+        # Link resolved questions to the post
         if len(resolved_questions) > 0:
             post.resolves = resolved_questions
             for question in resolved_questions:
@@ -457,6 +472,11 @@ class RevisionResource(Resource):
             if len(revisions) > 0:
                 newest = revisions[0]
                 newest.is_current = True
+
+                # Make resolved questions point to the new current revison
+                migrate_resolved_questions(revision.resolves, newest)
+            else:
+                unresolve_all(revision.resolves)
 
         db.session.commit()
 
