@@ -45,10 +45,12 @@ class Question(db.Model):
     text = db.Column(db.Text)
     user_id = db.Column(db.Integer, db.ForeignKey(
         "users.id", name="questions_user_id_fkey", ondelete="SET NULL"))
+    post_id = db.Column(db.Integer, db.ForeignKey("posts.id"))
 
     site = relationship("Site")
     subject = relationship("Subject")
     user = relationship("User")
+    resolved_by = relationship("Post", back_populates="resolves")
 
     resolved = db.Column(db.Boolean, nullable=False, server_default="false")
 

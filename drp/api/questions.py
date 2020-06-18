@@ -7,6 +7,7 @@ from ..swag import swag
 
 from .site import serialize_site
 from .subject import serialize_subject
+from .posts import serialize_post
 
 
 questions = Blueprint("questions", __name__)
@@ -49,6 +50,10 @@ def serialize_question(question):
         type: string
       subject:
         $ref: "#/definitions/Subject"
+      resolved:
+        type: boolean
+      resolved_by:
+        $ref: "#/definitions/Post"
       text:
         type: string
     """
@@ -60,6 +65,8 @@ def serialize_question(question):
         "subject": serialize_subject(question.subject),
         "text": question.text,
         "resolved": question.resolved,
+        "resolved_by": serialize_post(question.resolved_by)
+        if question.resolved_by is not None else None,
         "user": question.user_id,
     }
 

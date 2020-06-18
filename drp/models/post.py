@@ -36,6 +36,7 @@ class Post(db.Model):
     tags = relationship("Tag", secondary="post_tag")
 
     files = relationship("File", back_populates="post")
+    resolves = relationship("Question", back_populates="resolved_by")
 
     __ts_vector__ = create_tsvector(
         title,

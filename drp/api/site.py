@@ -72,14 +72,22 @@ class SiteListResource(Resource):
         """
         Creates a new site.
         ---
-        paramters:
+        parameters:
           - in: body
             name: site
             schema:
               type: object
               properties:
-                name: string
-                required: true
+                name:
+                  type: string
+                  required: true
+        responses:
+          200:
+            description: Success
+            schema:
+              $ref: "#/definitions/Site"
+          422:
+            description: Unprocessable entry
         """
         body = request.json
 

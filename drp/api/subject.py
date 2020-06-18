@@ -72,14 +72,22 @@ class SubjectListResource(Resource):
         """
         Creates a new subject.
         ---
-        paramters:
+        parameters:
           - in: body
             name: subject
             schema:
               type: object
               properties:
-                name: string
-                required: true
+                name:
+                  type: string
+                  required: true
+        responses:
+          200:
+            description: Success
+            schema:
+              $ref: "#/definitions/Subject"
+          422:
+            description: Unprocessable entry
         """
         body = request.json
 

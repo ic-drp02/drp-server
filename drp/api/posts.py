@@ -9,7 +9,7 @@ from flask import request, current_app
 from flask_restful import Resource, abort
 
 from ..db import db
-from ..models import Post, Post_Tag, Tag, File
+from ..models import Post, Post_Tag, Tag, File, Question
 from ..swag import swag
 
 from .. import notifications
@@ -267,6 +267,12 @@ class PostListResource(Resource):
             type: integer
             name: updates
             description: ID of the post that is to be updated.
+          - in: formData
+            type: array
+            name: resolves
+            description: The IDs of questions that are resolved by this post.
+            items:
+              type: number
         responses:
           200:
             schema:
@@ -280,6 +286,7 @@ class PostListResource(Resource):
         names = request.form.getlist('names')
         is_guideline = request.form.get('is_guideline')
         updates = request.form.get('updates')
+        resolves = request.form.getlist('resolves')
 
         # Check that required fields are present
         if title is None or summary is None or content is None:
@@ -333,6 +340,24 @@ class PostListResource(Resource):
             return abort(400, message="The value is_guideline="
                          f"{is_guideline} is invalid.")
 
+        # Check that all resolved questions exist and are not resolved already
+        resolved_questions = []
+        if resolves is not None:
+            if len(resolves) == 1 and ',' in resolves[0]:
+                resolves = resolves[0].split(',')
+            for question_id in resolves:
+                question = Question.query.filter(
+                    Question.id == question_id).one_or_none()
+                if question is None:
+                    abort(400, message="One of the resolved questions does "
+                          "not exist")
+                if question.resolved:
+                    abort(
+                        400, message="Cannot resolve question that is already "
+                        "resolved.")
+                resolved_questions.append(question)
+
+        # Add post to the database
         if is_guideline == "true" and updates is not None:
             old_post = get_current_post_by_id(updates)
             if old_post is None or not old_post.is_guideline:
@@ -343,6 +368,10 @@ class PostListResource(Resource):
         else:
             post = Post(title=title, summary=summary, content=content,
                         is_guideline=(is_guideline == "true"), tags=tags)
+        if len(resolved_questions) > 0:
+            post.resolves = resolved_questions
+            for question in resolved_questions:
+                question.resolved = True
         db.session.add(post)
 
         # Save files
