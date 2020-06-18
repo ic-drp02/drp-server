@@ -2,7 +2,7 @@ from flask import Blueprint, request
 from flask_restful import Resource, abort
 
 from ..db import db
-from ..models import Question, Site, Subject, Grade, User, Post
+from ..models import Question, Site, Subject, Grade, User
 from ..swag import swag
 
 from .site import serialize_site
@@ -13,19 +13,14 @@ from .posts import serialize_post
 questions = Blueprint("questions", __name__)
 
 
-@questions.route("/<int:qid>/resolve/<int:pid>", methods=["POST"])
-def resolve(qid, pid):
-    question = Question.query.filter(Question.id == qid).one_or_none()
+@questions.route("/<int:id>/resolve", methods=["POST"])
+def resolve(id):
+    question = Question.query.filter(Question.id == id).one_or_none()
 
     if question is None:
         return abort(404)
 
-    post = Post.query.filter(Post.id == pid).one_or_none()
-
-    if post is None:
-        return abort(400, message="Invalid post ID")
-
-    question.resolved_by = post
+    question.resolved = True
 
     db.session.commit()
 
@@ -55,6 +50,8 @@ def serialize_question(question):
         type: string
       subject:
         $ref: "#/definitions/Subject"
+      resolved:
+        type: boolean
       resolved_by:
         $ref: "#/definitions/Post"
       text:
@@ -67,6 +64,7 @@ def serialize_question(question):
         "specialty": question.specialty,
         "subject": serialize_subject(question.subject),
         "text": question.text,
+        "resolved": question.resolved,
         "resolved_by": serialize_post(question.resolved_by)
         if question.resolved_by is not None else None,
         "user": question.user_id,
