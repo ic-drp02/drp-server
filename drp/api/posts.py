@@ -516,6 +516,9 @@ class PostFetchResource(Resource):
         if len(ids) == 1 and ',' in ids[0]:
             ids = ids[0].split(',')
 
+        if len(ids) == 1 and ids[0] == "":
+            return []
+
         if not all(id.isdigit() for id in ids):
             abort(400, message="IDs must be integers")
 
