@@ -512,8 +512,12 @@ class PostFetchResource(Resource):
             description: Not found
         """
         ids = request.args.getlist("ids")
+
         if len(ids) == 1 and ',' in ids[0]:
             ids = ids[0].split(',')
+
+        if not all(id.isdigit() for id in ids):
+            abort(400, message="IDs must be integers")
 
         posts = Post.query.filter(
             Post.is_current & Post.post_id.in_(ids)).all()
