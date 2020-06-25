@@ -419,7 +419,7 @@ class PostListResource(Resource):
                     q.user, "Your question has been resolved",
                     q.text, data={"id": post.id, "resolves": q.id})
 
-        notifications.broadcast(title, summary, data={"id": post.id})
+        notifications.broadcast(title, summary, data={"id": post.post_id})
 
         return serialize_post(post)
 
