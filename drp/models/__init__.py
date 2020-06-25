@@ -4,5 +4,5 @@ from .device import Device
 from .user import User, UserRole
 
 __all__ = ["Post", "PostRevision", "Tag", "PostRev_Tag", "File",
-           "Site", "Subject", "Grade", "Device",
+           "Question", "Site", "Subject", "Grade", "Device",
            "User", "UserRole"]

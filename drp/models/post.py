@@ -24,8 +24,7 @@ class Post(db.Model):
     is_guideline = db.Column(db.Boolean())
 
     latest_rev_id = db.Column(db.Integer, db.ForeignKey(
-        "post_revisions.id", name="posts_latest_rev_id_fkey",
-        ondelete="SET NULL"))
+        "post_revisions.id", name="posts_latest_rev_id_fkey"))
 
     latest_rev = relationship("PostRevision",
                               back_populates="post",
@@ -39,11 +38,11 @@ class PostRevision(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     post_id = db.Column(db.Integer, db.ForeignKey(
-        "posts.id", name="post_revisions_post_id_fkey", ondelete="SET NULL"))
+        "posts.id", name="post_revisions_post_id_fkey", ondelete="CASCADE"))
 
     title = db.Column(db.Text(), nullable=False)
-    summary = db.Column(db.Text())
-    content = db.Column(db.Text())
+    summary = db.Column(db.Text(), nullable=False)
+    content = db.Column(db.Text(), nullable=False)
 
     created_at = db.Column(db.DateTime(timezone=True), nullable=False,
                            server_default=func.now())
