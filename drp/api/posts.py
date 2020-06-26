@@ -100,7 +100,7 @@ def get_posts():
     if tag:
         tag = Tag.query.filter(Tag.name == tag).one_or_none()
         if not tag:
-            return jsonify([])
+            abort(400, f"the tag `{tag}` does not exist")
         query = query.join(PostRev_Tag).join(
             Tag).filter(Tag.id == tag.id)
 
