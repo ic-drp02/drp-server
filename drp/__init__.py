@@ -24,9 +24,6 @@ def init_api(app):
     api.add_resource(res.TagResource, "/api/tags/<int:id>")
     api.add_resource(res.TagListResource, "/api/tags")
 
-    api.add_resource(res.FileResource, '/api/files/<int:id>')
-    api.add_resource(res.FileListResource, "/api/files")
-
     api.add_resource(res.RawFileViewResource, '/api/rawfiles/view/<int:id>')
     api.add_resource(res.RawFileDownloadResource,
                      '/api/rawfiles/download/<int:id>')
