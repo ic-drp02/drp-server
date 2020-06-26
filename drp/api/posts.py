@@ -179,7 +179,6 @@ def get_post(id):
 def delete_post(id):
     for question in Question.query.filter(Question.post_id == id):
         question.resolved_by = None
-        question.resolved = False
 
     rows_deleted = Post.query.filter(Post.id == id).delete()
 
@@ -279,7 +278,6 @@ def delete_post_revision(post, revision):
         # Unlink any questions that were resolved by the post
         for question in Question.query.filter(Question.post_id == id):
             question.resolved_by = None
-            question.resolved = False
 
         Post.query.filter(Post.id == post.id).delete()
 
