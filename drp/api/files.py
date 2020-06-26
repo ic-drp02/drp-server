@@ -30,7 +30,7 @@ def serialize_file(file):
     return {
         "id": file.id,
         "name": file.name,
-        "post": file.post_id
+        "post_revision": file.post_rev_id
     }
 
 

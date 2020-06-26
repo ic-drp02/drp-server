@@ -11,7 +11,7 @@ from ..db import db
 from ..models import User, UserRole
 from ..mail import mail
 
-from .utils import require_auth, require_admin, error
+from .utils import require_auth, require_admin, abort
 
 
 users = Blueprint("users", __name__)
@@ -58,15 +58,13 @@ def create_user():
     role = body.get("role")
 
     if email is None or password is None:
-        return error(400,
-                     message="`email` and `password` fields"
-                     "are required.")
+        abort(400, message="`email` and `password` fields are required.")
 
     if len(password) < 8:
-        return error(400, type="ShortPassword")
+        abort(400, type="ShortPassword")
 
     if role is not None and role != "normal" and role != "admin":
-        return error(400, message="`role` must be one of {normal, admin}.")
+        abort(400, message="`role` must be one of {normal, admin}.")
 
     role = UserRole.ADMIN if (role == "admin") else UserRole.NORMAL
 
@@ -83,7 +81,7 @@ def create_user():
         db.session.commit()
     except IntegrityError as err:
         if err.orig.pgcode == "23505":
-            return error(
+            abort(
                 422, message="A user with this email already exists.")
         else:
             raise
@@ -104,7 +102,7 @@ def create_user():
 @require_auth
 def by_id(id):
     if g.user.role != UserRole.ADMIN and g.user.id != id:
-        return error(401, type="InsufficientPermissions")
+        abort(401, type="InsufficientPermissions")
 
     if request.method == "GET":
         return get_user_by_id(id)
@@ -123,7 +121,7 @@ def get_user_by_id(id):
         user = User.query.filter(User.id == id).one_or_none()
 
     if user is None:
-        return error(404)
+        abort(404)
 
     return serialize_user(user)
 
@@ -135,7 +133,7 @@ def update_user_by_id(id):
         user = User.query.filter(User.id == id).one_or_none()
 
     if user is None:
-        return error(404)
+        abort(404)
 
     body = request.json
 
@@ -144,7 +142,7 @@ def update_user_by_id(id):
 
     if password:
         if len(password) < 8:
-            return error(400, type="ShortPassword")
+            abort(400, type="ShortPassword")
 
         hasher = PasswordHasher()
         hash = hasher.hash(password)
@@ -152,10 +150,10 @@ def update_user_by_id(id):
 
     if role:
         if g.user.role != UserRole.ADMIN:
-            return error(401, type="InsufficientPermission")
+            abort(401, type="InsufficientPermission")
 
         if role != "normal" and role != "admin":
-            return error(400, message="`role` must be one of {normal, admin}.")
+            abort(400, message="`role` must be one of {normal, admin}.")
 
         user.role = UserRole.ADMIN if (role == "admin") else UserRole.NORMAL
 
@@ -171,7 +169,7 @@ def delete_user_by_id(id):
         user = User.query.filter(User.id == id).one_or_none()
 
     if user is None:
-        return error(404)
+        abort(404)
 
     db.session.delete(user)
     db.session.commit()

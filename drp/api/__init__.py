@@ -1,6 +1,5 @@
 from .auth import auth
-from .posts import (PostResource, PostListResource, RevisionResource,
-                    PostFetchResource)
+from .posts import posts
 from .search import PostSearchResource
 from .tags import TagListResource, TagResource
 from .files import (FileResource, FileListResource, RawFileViewResource,
@@ -11,9 +10,7 @@ from .subject import SubjectResource, SubjectListResource
 from .notifications import notifications
 from .users import users
 
-__all__ = ["PostResource", "PostListResource",
-           "RevisionResource", "PostFetchResource",
-           "PostSearchResource",
+__all__ = ["posts", "PostSearchResource",
            "TagResource", "TagListResource",
            "QuestionResource", "QuestionListResource",
            "FileResource", "FileListResource",

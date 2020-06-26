@@ -4,7 +4,7 @@ from sqlalchemy.exc import IntegrityError
 from ..db import db
 from ..models import Device, User
 
-from .utils import error
+from .utils import abort
 
 notifications = Blueprint("notifications", __name__)
 
@@ -15,11 +15,11 @@ def register():
     user = request.args.get("user")
 
     if not token:
-        return error(400, "Missing `token` query parameter")
+        abort(400, "Missing `token` query parameter")
 
     user = User.query.filter(User.id == user).one_or_none()
     if not user:
-        return error(400, "Missing `user` query parameter")
+        abort(400, "Missing `user` query parameter")
 
     device = Device(expo_push_token=token, user=user)
 

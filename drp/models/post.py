@@ -21,14 +21,17 @@ class Post(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
 
-    is_guideline = db.Column(db.Boolean())
+    is_guideline = db.Column(db.Boolean(), nullable=False)
 
     latest_rev_id = db.Column(db.Integer, db.ForeignKey(
-        "post_revisions.id", name="posts_latest_rev_id_fkey"))
+        "post_revisions.id", name="posts_latest_rev_id_fkey"), nullable=True)
 
     latest_rev = relationship("PostRevision",
-                              back_populates="post",
                               foreign_keys=[latest_rev_id])
+
+    revisions = relationship("PostRevision",
+                             foreign_keys="[PostRevision.post_id]",
+                             back_populates="post")
 
     resolves = relationship("Question", back_populates="resolved_by")
 
@@ -38,7 +41,8 @@ class PostRevision(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     post_id = db.Column(db.Integer, db.ForeignKey(
-        "posts.id", name="post_revisions_post_id_fkey", ondelete="CASCADE"))
+        "posts.id", name="post_revisions_post_id_fkey", ondelete="CASCADE"),
+        nullable=False)
 
     title = db.Column(db.Text(), nullable=False)
     summary = db.Column(db.Text(), nullable=False)
@@ -47,7 +51,9 @@ class PostRevision(db.Model):
     created_at = db.Column(db.DateTime(timezone=True), nullable=False,
                            server_default=func.now())
 
-    post = relationship("Post", foreign_keys=[post_id])
+    post = relationship("Post",
+                        foreign_keys=[post_id],
+                        back_populates="revisions")
 
     tags = relationship("Tag", secondary="post_rev_tag")
     files = relationship("File", back_populates="post_revision")
@@ -105,7 +111,8 @@ class File(db.Model):
     filename = db.Column(db.String(300))
 
     post_rev_id = db.Column(db.Integer,
-                            db.ForeignKey("post_revisions.id"))
+                            db.ForeignKey("post_revisions.id"),
+                            nullable=False)
 
     post_revision = relationship('PostRevision', back_populates='files')
 

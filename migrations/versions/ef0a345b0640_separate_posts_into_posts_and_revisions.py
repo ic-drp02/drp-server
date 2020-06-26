@@ -113,7 +113,7 @@ def upgrade():
     # Create the new posts table
     op.create_table("posts_new",
                     sa.Column("id", sa.Integer(), nullable=False),
-                    sa.Column("is_guideline", sa.Boolean(), nullable=True),
+                    sa.Column("is_guideline", sa.Boolean(), nullable=False),
                     sa.Column("latest_rev_id", sa.Integer(), nullable=True),
                     sa.PrimaryKeyConstraint("id")
                     )
@@ -121,11 +121,11 @@ def upgrade():
     # Create the post revisions table
     op.create_table('post_revisions',
                     sa.Column('id', sa.Integer(), nullable=False),
-                    sa.Column('post_id', sa.Integer(), nullable=True),
+                    sa.Column('post_id', sa.Integer(), nullable=False),
                     sa.Column('title', sa.Text(), nullable=False),
                     sa.Column('summary', sa.Text(), nullable=False),
                     sa.Column('content', sa.Text(), nullable=False),
-                    sa.Column('created_at', sa.DateTime(timezone=True),
+                    sa.Column('created_at', sa.DateTime(timezone=False),
                               server_default=sa.text('now()'), nullable=False),
                     sa.ForeignKeyConstraint(
                         ['post_id'], ['posts_new.id'], ondelete="CASCADE"),
@@ -188,6 +188,7 @@ def upgrade():
 
     op.drop_table("post_tag")
     op.drop_column("files", "post_id")
+    op.alter_column("files", "post_rev_id", nullable=False)
     op.drop_column("questions", "post_id")
     op.alter_column("questions", "post_id_new", new_column_name="post_id")
 

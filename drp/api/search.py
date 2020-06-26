@@ -8,7 +8,7 @@ from flask_restful import Resource, abort
 
 from .posts import serialize_post
 
-from ..models import Post, Post_Tag, Tag
+# from ..models import Post, Post_Tag, Tag
 
 from ..db import db
 
@@ -87,35 +87,35 @@ class PostSearchResource(Resource):
               items:
                 $ref: "#/definitions/Post"
         """
-        if searched == "":
-            return abort(400, message="Empty string search is invalid.")
+        # if searched == "":
+        #     return abort(400, message="Empty string search is invalid.")
 
-        page = request.args.get("page")
-        results_per_page = request.args.get("results_per_page")
-        guidelines_only = request.args.get("guidelines_only")
-        include_old = request.args.get("include_old")
-        tag = request.args.get("tag")
+        # page = request.args.get("page")
+        # results_per_page = request.args.get("results_per_page")
+        # guidelines_only = request.args.get("guidelines_only")
+        # include_old = request.args.get("include_old")
+        # tag = request.args.get("tag")
 
-        ts_query, ts_rank = construct_fulltext_query_and_rank(searched)
+        # ts_query, ts_rank = construct_fulltext_query_and_rank(searched)
 
-        # Query for the search results ordered by rank
-        query = db.session.query(Post, ts_rank) \
-            .filter(Post.__ts_vector__.op('@@')(ts_query))
-        if (include_old != "true"):
-            query = query.filter(Post.is_current)
-        if guidelines_only == "true":
-            query = query.filter(Post.is_guideline)
-        if tag is not None:
-            query = query.join(Post_Tag).join(Tag).filter(Tag.name == tag)
-        query = query.order_by(text("rank desc"), Post.created_at.desc())
+        # # Query for the search results ordered by rank
+        # query = db.session.query(Post, ts_rank) \
+        #     .filter(Post.__ts_vector__.op('@@')(ts_query))
+        # if (include_old != "true"):
+        #     query = query.filter(Post.is_current)
+        # if guidelines_only == "true":
+        #     query = query.filter(Post.is_guideline)
+        # if tag is not None:
+        #     query = query.join(Post_Tag).join(Tag).filter(Tag.name == tag)
+        # query = query.order_by(text("rank desc"), Post.created_at.desc())
 
-        if page is None or results_per_page is None:
-            return extract_results_posts(query)
+        # if page is None or results_per_page is None:
+        #     return extract_results_posts(query)
 
-        if not page.isdigit() or not results_per_page.isdigit():
-            return abort(400, message="Page and results_per_page fields must "
-                         "be numbers.")
+        # if not page.isdigit() or not results_per_page.isdigit():
+        #     return abort(400, message="Page and results_per_page fields must "
+        #                  "be numbers.")
 
-        query = limit_query(query, page, results_per_page)
+        # query = limit_query(query, page, results_per_page)
 
         return extract_results_posts(query)

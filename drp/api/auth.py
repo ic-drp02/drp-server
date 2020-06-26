@@ -16,7 +16,7 @@ from ..mail import mail
 from ..swag import swag
 
 from .users import serialize_role
-from .utils import error
+from .utils import abort
 
 auth = Blueprint("auth", __name__)
 
@@ -75,21 +75,19 @@ def authenticate():
     password = body.get("password")
 
     if email is None or password is None:
-        return error(400,
-                     message="`email` and `password` fields"
-                     "are required.")
+        abort(400, message="`email` and `password` fields are required.")
 
     user = User.query.filter(User.email == email).one_or_none()
 
     if user is None:
-        return error(401, type="InvalidCredentials")
+        abort(401, type="InvalidCredentials")
 
     hasher = PasswordHasher()
 
     try:
         hasher.verify(user.password_hash, password)
     except VerifyMismatchError:
-        return error(401, type="InvalidCredentials")
+        abort(401, type="InvalidCredentials")
 
     if hasher.check_needs_rehash(user.password_hash):
         hash = hasher.hash(password)
@@ -97,7 +95,7 @@ def authenticate():
         db.session.commit()
 
     if not user.confirmed:
-        return error(401, type="Unconfirmed")
+        abort(401, type="Unconfirmed")
 
     now = time.time()
     expiration_time = now + 2 * 60 * 60
@@ -125,27 +123,27 @@ def register():
 
     email = body.get("email")
     if not email:
-        return error(400, message="`email` is required")
+        abort(400, message="`email` is required")
 
     password = body.get("password")
     if not password:
-        return error(400, message="`password` is required")
+        abort(400, message="`password` is required")
 
     email = email.lower()
     parts = email.split("@")
     if len(parts) != 2:
-        return error(400, type="InvalidEmail")
+        abort(400, type="InvalidEmail")
 
     if len(password) < 8:
-        return error(400, type="ShortPassword")
+        abort(400, type="ShortPassword")
 
     domain = parts[1]
     if domain != "nhs.net" and domain != "ic.ac.uk" \
             and domain != "imperial.ac.uk":
-        return error(400, type="UnauthorisedDomain")
+        abort(400, type="UnauthorisedDomain")
 
     if User.query.filter(User.email == email).one_or_none() is not None:
-        return error(400, type="Registered")
+        abort(400, type="Registered")
 
     hasher = PasswordHasher()
     hash = hasher.hash(password)
