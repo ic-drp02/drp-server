@@ -1,6 +1,6 @@
 import json
 
-from drp.models import Post
+from drp.models import Post, PostRevision, Tag
 
 
 def add_test_posts(app, db):
@@ -53,15 +53,45 @@ the second letter of the Greek alphabet.""",
         {
             "title": "Test 3",
             "summary": "Test summary",
-            "content": "Alpha beta"
+            "content": "Alpha beta",
         }
     ]
     with app.app_context():
-        for post in posts:
-            post = Post(title=post["title"],
-                        summary=post["summary"], content=post["content"])
-            db.session.add(post)
+        t1 = Tag(name="Tag 1")
+        t2 = Tag(name="Tag 2")
+
+        db.session.add(t1)
+        db.session.add(t2)
         db.session.commit()
+
+        for post_data in posts:
+            if post_data["title"] == "Test 1" \
+                    or post_data["title"] == "Test 3":
+                post = Post(is_guideline=True)
+            else:
+                post = Post(is_guideline=False)
+            db.session.add(post)
+            db.session.commit()
+
+            if post_data["title"] == "Test 1":
+                post_revision = PostRevision(
+                    title=post_data["title"], summary=post_data["summary"],
+                    content=post_data["content"], post=post, tags=[t1, t2])
+            elif post_data["title"] == "Test 3":
+                post_revision = PostRevision(
+                    title=post_data["title"], summary=post_data["summary"],
+                    content=post_data["content"], post=post, tags=[t1])
+            else:
+                post_revision = PostRevision(
+                    title=post_data["title"], summary=post_data["summary"],
+                    content=post_data["content"], post=post)
+
+            db.session.add(post_revision)
+            db.session.commit()
+
+            post.latest_rev = post_revision
+
+            db.session.commit()
 
 
 def test_search_single_content(app, db):
@@ -75,8 +105,8 @@ def test_search_single_content(app, db):
         posts = json.loads(response.data.decode("utf-8"))
 
         assert len(posts) == 2
-        assert "beginning" in posts[0]["title"]
-        assert "Turtle" in posts[1]["title"]
+        assert "beginning" in posts[0]["latest_revision"]["title"]
+        assert "Turtle" in posts[1]["latest_revision"]["title"]
 
 
 def test_search_two_content(app, db):
@@ -90,8 +120,8 @@ def test_search_two_content(app, db):
         posts = json.loads(response.data.decode("utf-8"))
 
         assert len(posts) == 2
-        assert "beginning" in posts[0]["title"]
-        assert "Turtle" in posts[1]["title"]
+        assert "beginning" in posts[0]["latest_revision"]["title"]
+        assert "Turtle" in posts[1]["latest_revision"]["title"]
 
 
 def test_search_three_across_columns(app, db):
@@ -105,7 +135,7 @@ def test_search_three_across_columns(app, db):
         posts = json.loads(response.data.decode("utf-8"))
 
         assert len(posts) == 1
-        assert "beginning" in posts[0]["title"]
+        assert "beginning" in posts[0]["latest_revision"]["title"]
 
 
 def test_search_order_by_rank(app, db):
@@ -119,9 +149,9 @@ def test_search_order_by_rank(app, db):
         posts = json.loads(response.data.decode("utf-8"))
 
         assert len(posts) == 3
-        assert posts[0]["title"] == "Test 3"
-        assert posts[1]["title"] == "Test 1"
-        assert posts[2]["title"] == "Test 2"
+        assert posts[0]["latest_revision"]["title"] == "Test 3"
+        assert posts[1]["latest_revision"]["title"] == "Test 1"
+        assert posts[2]["latest_revision"]["title"] == "Test 2"
 
 
 def test_search_form(app, db):
@@ -135,7 +165,7 @@ def test_search_form(app, db):
         posts = json.loads(response.data.decode("utf-8"))
 
         assert len(posts) == 1
-        assert "beginning" in posts[0]["title"]
+        assert "beginning" in posts[0]["latest_revision"]["title"]
 
 
 def test_search_prefix(app, db):
@@ -149,7 +179,7 @@ def test_search_prefix(app, db):
         posts = json.loads(response.data.decode("utf-8"))
 
         assert len(posts) == 1
-        assert "beginning" in posts[0]["title"]
+        assert "beginning" in posts[0]["latest_revision"]["title"]
 
         response = client.get("/api/search/posts/conta")
 
@@ -158,7 +188,7 @@ def test_search_prefix(app, db):
         posts = json.loads(response.data.decode("utf-8"))
 
         assert len(posts) == 1
-        assert "Turtle" in posts[0]["title"]
+        assert "Turtle" in posts[0]["latest_revision"]["title"]
 
 
 def test_search_stop_word(app, db):
@@ -219,8 +249,8 @@ def test_search_first_page(app, db):
         posts = json.loads(response.data.decode("utf-8"))
 
         assert len(posts) == 2
-        assert posts[0]["title"] == "Test 3"
-        assert posts[1]["title"] == "Test 1"
+        assert posts[0]["latest_revision"]["title"] == "Test 3"
+        assert posts[1]["latest_revision"]["title"] == "Test 1"
 
 
 def test_search_second_page(app, db):
@@ -235,7 +265,7 @@ def test_search_second_page(app, db):
         posts = json.loads(response.data.decode("utf-8"))
 
         assert len(posts) == 1
-        assert posts[0]["title"] == "Test 2"
+        assert posts[0]["latest_revision"]["title"] == "Test 2"
 
 
 def test_search_high_page(app, db):
@@ -250,3 +280,50 @@ def test_search_high_page(app, db):
         posts = json.loads(response.data.decode("utf-8"))
 
         assert len(posts) == 0
+
+
+def test_search_guidelines_only(app, db):
+    add_test_posts(app, db)
+
+    with app.test_client() as client:
+        response = client.get("/api/search/posts/alpha beta?type=guideline")
+
+        assert "200" in response.status
+
+        posts = json.loads(response.data.decode("utf-8"))
+
+        assert len(posts) == 2
+
+
+def test_search_updates_only(app, db):
+    add_test_posts(app, db)
+
+    with app.test_client() as client:
+        response = client.get("/api/search/posts/alpha beta?type=update")
+
+        assert "200" in response.status
+
+        posts = json.loads(response.data.decode("utf-8"))
+
+        assert len(posts) == 1
+
+
+def test_search_tags(app, db):
+    add_test_posts(app, db)
+
+    with app.test_client() as client:
+        response = client.get("/api/search/posts/alpha beta?tag=Tag 1")
+
+        assert "200" in response.status
+
+        posts = json.loads(response.data.decode("utf-8"))
+
+        assert len(posts) == 2
+
+        response = client.get("/api/search/posts/alpha beta?tag=Tag 2")
+
+        assert "200" in response.status
+
+        posts = json.loads(response.data.decode("utf-8"))
+
+        assert len(posts) == 1
