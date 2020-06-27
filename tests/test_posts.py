@@ -441,8 +441,10 @@ def test_delete_post_with_file(app, db):
 
         data = json.loads(response.data.decode("utf-8"))
 
-        filename = File.query.filter(
-            File.id == data["latest_revision"]["files"][0]["id"]).one_or_none().filename
+        filename = File.query \
+            .filter(File.id == data["latest_revision"]["files"][0]["id"]) \
+            .one_or_none() \
+            .filename
 
         file_path = os.path.join(tests_path, "output", filename)
         assert os.path.isfile(file_path)
