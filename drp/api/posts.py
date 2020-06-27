@@ -52,7 +52,7 @@ def serialize_post(post):
     }
 
 
-@posts.route("/", methods=["GET", "POST"])
+@posts.route("", methods=["GET", "POST"])
 def all_posts():
     if request.method == "GET":
         return get_posts()
@@ -68,10 +68,8 @@ def get_posts():
     page = request.args.get("page")
     per_page = request.args.get("per_page")
 
-    query = Post.query.join(Post.latest_rev) \
-        .options(
-        joinedload("latest_rev")
-        .options(
+    query = Post.query.join(Post.latest_rev).options(
+        joinedload("latest_rev").options(
             joinedload("tags"),
             joinedload("files")))
 

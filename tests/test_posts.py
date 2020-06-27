@@ -40,7 +40,7 @@ def test_get_all_posts(app, db):
                            for i in range(0, count)])
 
     with app.test_client() as client:
-        response = client.get("/api/posts/")
+        response = client.get("/api/posts")
 
         assert "200" in response.status
 
@@ -70,7 +70,7 @@ def test_get_all_guidelines(app, db):
                     is_guideline=True)
 
     with app.test_client() as client:
-        response = client.get("/api/posts/?type=guideline")
+        response = client.get("/api/posts?type=guideline")
 
         assert "200" in response.status
 
@@ -89,7 +89,7 @@ def test_create_post(app, db):
             "content": "A few paragraphs of content..."
         }
 
-        response = client.post('/api/posts/',
+        response = client.post('/api/posts',
                                content_type='multipart/form-data',
                                data=post)
 
@@ -114,7 +114,7 @@ def test_update_post(app, db):
             "is_guideline": "true"
         }
 
-        response = client.post('/api/posts/',
+        response = client.post('/api/posts',
                                content_type='multipart/form-data',
                                data=post)
 
@@ -156,7 +156,7 @@ def test_create_post_with_missing_content(app, db):
             "summary": "A summary"
         }
 
-        response = client.post('/api/posts/',
+        response = client.post('/api/posts',
                                content_type='multipart/form-data',
                                data=post)
 
@@ -170,7 +170,7 @@ def test_create_post_with_missing_summary(app, db):
             "content": "A few paragraphs of content..."
         }
 
-        response = client.post('/api/posts/',
+        response = client.post('/api/posts',
                                content_type='multipart/form-data',
                                data=post)
 
@@ -198,7 +198,7 @@ def test_create_post_with_tags(app, db):
             "tags": ["Tag 1", "Tag 2"]
         }
 
-        response = client.post('/api/posts/',
+        response = client.post('/api/posts',
                                content_type='multipart/form-data',
                                data=post)
 
@@ -242,7 +242,7 @@ def test_create_post_with_files(app, db):
             "file_names": ["name1.pdf", "name2.jpg"]
         }
 
-        response = client.post('/api/posts/',
+        response = client.post('/api/posts',
                                content_type='multipart/form-data',
                                data=post)
 
@@ -291,7 +291,7 @@ def test_create_post_with_missing_title(app, db):
             "content": "A few paragraphs of content..."
         }
 
-        response = client.post('/api/posts/',
+        response = client.post('/api/posts',
                                content_type='multipart/form-data',
                                data=post)
 
@@ -309,7 +309,7 @@ def test_create_post_with_bad_file_type(app, db):
             "file_names": ["name1.html"]
         }
 
-        response = client.post('/api/posts/',
+        response = client.post('/api/posts',
                                content_type='multipart/form-data',
                                data=post)
 
@@ -332,7 +332,7 @@ def test_create_post_with_files_names_mismatch(app, db):
             "file_names": ["name1.pdf", "name2.png"]
         }
 
-        response = client.post('/api/posts/',
+        response = client.post('/api/posts',
                                content_type='multipart/form-data',
                                data=post)
 
@@ -433,7 +433,7 @@ def test_delete_post_with_file(app, db):
             "file_names": ["name1.pdf"]
         }
 
-        response = client.post('/api/posts/',
+        response = client.post('/api/posts',
                                content_type='multipart/form-data',
                                data=post)
 
