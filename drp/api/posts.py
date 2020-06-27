@@ -68,8 +68,10 @@ def get_posts():
     page = request.args.get("page")
     per_page = request.args.get("per_page")
 
-    query = Post.query.join(Post.latest_rev).options(
-        joinedload("latest_rev").options(
+    query = Post.query.join(Post.latest_rev) \
+        .options(
+        joinedload("latest_rev")
+        .options(
             joinedload("tags"),
             joinedload("files")))
 
@@ -104,7 +106,7 @@ def get_posts():
         query = query.join(PostRev_Tag).join(
             Tag).filter(Tag.id == tag.id)
 
-    query = query.join(Post.latest_rev).order_by(
+    query = query.order_by(
         PostRevision.created_at.desc())
 
     # Pagination
