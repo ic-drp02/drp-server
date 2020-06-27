@@ -128,7 +128,7 @@ def create_post():
     tag_names = request.form.getlist("tags")
     type = request.form.get("type")
     resolves = request.form.getlist("resolves")
-    files = request.form.getlist("files")
+    files = request.files.getlist("files")
     names = request.form.getlist("file_names")
 
     validate_rev_data(title, summary, content, files, names)
@@ -177,14 +177,27 @@ def get_post(id):
 
 
 def delete_post(id):
+    post_query = Post.query.filter(Post.id == id)
+    post = post_query.one_or_none()
+
+    if post is None:
+        abort(404)
+
+    # Delete all files attached to any of the post's revisions
+    for revision in post.revisions:
+        for file in revision.files:
+            try:
+                os.remove(os.path.join(
+                    current_app.config['UPLOAD_FOLDER'], file.filename))
+            except OSError as e:
+                print("Could not delete file, " + repr(e))
+
+            db.session.delete(file)
+
     for question in Question.query.filter(Question.post_id == id):
         question.resolved_by = None
 
-    rows_deleted = Post.query.filter(Post.id == id).delete()
-
-    if rows_deleted == 0:
-        abort(404)
-
+    post_query.delete()
     db.session.commit()
 
     return jsonify({"message": "deleted"}), 204
@@ -226,7 +239,7 @@ def create_post_revision(post):
     content = request.form.get("content")
     tag_names = request.form.getlist("tags")
     resolves = request.form.getlist("resolves")
-    files = request.form.getlist("files")
+    files = request.files.getlist("files")
     names = request.form.getlist("file_names")
 
     validate_rev_data(title, summary, content, files, names)
@@ -273,6 +286,16 @@ def get_post_revision(post, revision):
 
 
 def delete_post_revision(post, revision):
+    # Delete all files attached to the revision
+    for file in revision.files:
+        try:
+            os.remove(os.path.join(
+                current_app.config['UPLOAD_FOLDER'], file.filename))
+        except OSError as e:
+            print("Could not delete file, " + repr(e))
+
+        db.session.delete(file)
+
     # If this is the only revision, delete the whole post
     if len(post.revisions) == 1:
         # Unlink any questions that were resolved by the post
@@ -297,6 +320,8 @@ def delete_post_revision(post, revision):
             .delete()
 
     db.session.commit()
+
+    return jsonify({"message": "deleted"}), 204
 
 
 def validate_rev_data(title, summary, content, files, names):
