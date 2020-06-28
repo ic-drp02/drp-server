@@ -9,15 +9,20 @@ services:
       POSTGRES_PASSWORD: "drp-dev"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
+      interval: 2s
       timeout: 5s
       retries: 5
   web:
-    build: .
+    build: ./Dockerfile.dev
     ports:
       - 8000:8000
     environment:
+      FLASK_ENV: development
       DATABASE_URI: "postgresql://postgres:drp-dev@db:5432/postgres"
+    volumes:
+      - .:/app
+    working_dir: /app
+    entrypoint: flask run --host 0.0.0.0 --port 8000
     depends_on:
       db:
         condition: service_healthy
