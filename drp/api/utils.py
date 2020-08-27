@@ -1,20 +1,23 @@
 from functools import wraps
-from flask import request, g
+from flask import request, g, jsonify, abort as flask_abort
 
 from ..models import User, UserRole
 from ..utils import decode_authorization_header
 
 
-def error(code: int, message: str = None, type: str = None):
-    body = {}
+def abort(code: int, message: str = None, type: str = None):
+    if not type:
+        type = "error"
 
-    if type:
-        body["type"] = type
+    body = {"type": type}
 
     if message:
         body["message"] = message
 
-    return body, code, {"Content-Type": "application/json"}
+    response = jsonify(body)
+    response.status_code = code
+
+    flask_abort(response)
 
 
 def require_auth(f):
@@ -22,13 +25,13 @@ def require_auth(f):
     def decorated_f(*args, **kwargs):
         claims = decode_authorization_header(request)
         if claims is None:
-            return error(401, type="InvalidAuthToken")
+            abort(401, type="InvalidAuthToken")
 
         g.user = User.query.filter(
             User.email == claims.get("sub")).one_or_none()
 
         if g.user is None:
-            return error(401, type="InvalidAuthToken")
+            abort(401, type="InvalidAuthToken")
 
         return f(*args, **kwargs)
 
@@ -40,16 +43,16 @@ def require_admin(f):
     def decorated_f(*args, **kwargs):
         claims = decode_authorization_header(request)
         if claims is None:
-            return error(401, type="InvalidAuthToken")
+            abort(401, type="InvalidAuthToken")
 
         g.user = User.query.filter(
             User.email == claims.get("sub")).one_or_none()
 
         if g.user is None:
-            return error(401, type="InvalidAuthToken")
+            abort(401, type="InvalidAuthToken")
 
         if g.user.role != UserRole.ADMIN:
-            return error(401, type="InsufficientPermissions")
+            abort(401, type="InsufficientPermissions")
 
         return f(*args, **kwargs)
 

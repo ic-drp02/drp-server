@@ -18,21 +18,11 @@ def init_cli(app):
 def init_api(app):
     api = Api(app)
 
-    api.add_resource(res.PostResource, "/api/posts/<int:id>")
-    api.add_resource(res.PostListResource, "/api/posts")
-
-    api.add_resource(res.RevisionResource, "/api/revisions/<int:id>")
-
-    api.add_resource(res.PostFetchResource, "/api/fetch/posts/")
-
     api.add_resource(res.PostSearchResource,
                      "/api/search/posts/<string:searched>")
 
     api.add_resource(res.TagResource, "/api/tags/<int:id>")
     api.add_resource(res.TagListResource, "/api/tags")
-
-    api.add_resource(res.FileResource, '/api/files/<int:id>')
-    api.add_resource(res.FileListResource, "/api/files")
 
     api.add_resource(res.RawFileViewResource, '/api/rawfiles/view/<int:id>')
     api.add_resource(res.RawFileDownloadResource,
@@ -47,6 +37,7 @@ def init_api(app):
     api.add_resource(res.SiteResource, "/api/sites/<int:id>")
     api.add_resource(res.SiteListResource, "/api/sites")
 
+    app.register_blueprint(res.posts, url_prefix="/api/posts")
     app.register_blueprint(res.questions, url_prefix="/api/questions")
     app.register_blueprint(res.notifications, url_prefix="/api/notifications")
     app.register_blueprint(res.users, url_prefix="/api/users")

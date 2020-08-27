@@ -3,14 +3,29 @@ import os
 from io import BytesIO
 from hashlib import sha256
 
-from drp.models import Post, Tag, File
+from drp.models import Post, PostRevision, Tag, File
 
 
 def create_posts(app, db, posts):
     with app.app_context():
-        for post in posts:
-            db.session.add(post)
-        db.session.commit()
+        for p in posts:
+            create_post(app, db, p)
+
+
+def create_post(app, db, data, is_guideline=False):
+    post = Post(is_guideline=is_guideline)
+    db.session.add(post)
+    db.session.commit()
+
+    rev = PostRevision(title=data["title"], summary=data["summary"],
+                       content=data["content"], post=post)
+    db.session.add(rev)
+    db.session.commit()
+
+    post.latest_rev_id = rev.id
+    db.session.commit()
+
+    return post.id
 
 
 def test_get_all_posts(app, db):
@@ -19,7 +34,9 @@ def test_get_all_posts(app, db):
     content = "A few paragraphs of content..."
     count = 3
 
-    create_posts(app, db, [Post(title=title, summary=summary, content=content)
+    create_posts(app, db, [{"title": title,
+                            "summary": summary,
+                            "content": content}
                            for i in range(0, count)])
 
     with app.test_client() as client:
@@ -29,12 +46,14 @@ def test_get_all_posts(app, db):
 
         data = json.loads(response.data.decode("utf-8"))
 
+        print(data)
+
         assert len(data) == count
 
         for post in data:
-            assert post["title"] == title
-            assert post["summary"] == summary
-            assert post["content"] == content
+            assert post["latest_revision"]["title"] == title
+            assert post["latest_revision"]["summary"] == summary
+            assert post["latest_revision"]["content"] == content
 
 
 def test_get_all_guidelines(app, db):
@@ -44,13 +63,14 @@ def test_get_all_guidelines(app, db):
     content = "A few paragraphs of content..."
 
     with app.app_context():
-        db.session.add(Post(title=title_ng, summary=summary, content=content))
-        db.session.add(Post(title=title_g, summary=summary,
-                            content=content, is_guideline=True))
-        db.session.commit()
+        create_post(app, db, {"title": title_ng,
+                              "summary": summary, "content": content})
+        create_post(app, db,
+                    {"title": title_g, "summary": summary, "content": content},
+                    is_guideline=True)
 
     with app.test_client() as client:
-        response = client.get("/api/posts?guidelines_only=true")
+        response = client.get("/api/posts?type=guideline")
 
         assert "200" in response.status
 
@@ -58,7 +78,7 @@ def test_get_all_guidelines(app, db):
 
         assert len(data) == 1
 
-        assert data[0]["title"] == title_g
+        assert data[0]["latest_revision"]["title"] == title_g
 
 
 def test_create_post(app, db):
@@ -77,12 +97,12 @@ def test_create_post(app, db):
 
         data = json.loads(response.data.decode("utf-8"))
 
-        assert post["title"] == data["title"]
-        assert post["summary"] == data["summary"]
-        assert post["content"] == data["content"]
+        assert post["title"] == data["latest_revision"]["title"]
+        assert post["summary"] == data["latest_revision"]["summary"]
+        assert post["content"] == data["latest_revision"]["content"]
 
-        assert "id" in data
-        assert "created_at" in data
+        assert "id" in data["latest_revision"]
+        assert "created_at" in data["latest_revision"]
 
 
 def test_update_post(app, db):
@@ -108,22 +128,25 @@ def test_update_post(app, db):
             "title": "A new title",
             "summary": "",
             "content": "",
-            "is_guideline": "true",
-            "updates": str(id)
         }
 
-        response = client.post('/api/posts',
+        response = client.post(f'/api/posts/{id}/revisions',
                                content_type='multipart/form-data',
                                data=update)
-
-        data = json.loads(response.data.decode("utf-8"))
 
         assert "200" in response.status
 
         data = json.loads(response.data.decode("utf-8"))
 
-        assert id == data["id"]
         assert update["title"] == data["title"]
+
+    with app.app_context():
+        revs = PostRevision.query.all()
+
+        assert len(revs) == 2
+
+        for rev in revs:
+            assert rev.post_id == id
 
 
 def test_create_post_with_missing_content(app, db):
@@ -183,17 +206,17 @@ def test_create_post_with_tags(app, db):
 
         data = json.loads(response.data.decode("utf-8"))
 
-        assert post["title"] == data["title"]
-        assert post["content"] == data["content"]
-        assert post["summary"] == data["summary"]
+        assert post["title"] == data["latest_revision"]["title"]
+        assert post["content"] == data["latest_revision"]["content"]
+        assert post["summary"] == data["latest_revision"]["summary"]
 
-        assert "id" in data
-        assert "created_at" in data
+        assert "id" in data["latest_revision"]
+        assert "created_at" in data["latest_revision"]
 
         print(f"______TAGS_____: {post['tags']}")
 
-        assert {"id": id1, "name": "Tag 1"} in data["tags"]
-        assert {"id": id2, "name": "Tag 2"} in data["tags"]
+        assert {"id": id1, "name": "Tag 1"} in data["latest_revision"]["tags"]
+        assert {"id": id2, "name": "Tag 2"} in data["latest_revision"]["tags"]
 
 
 def test_create_post_with_files(app, db):
@@ -216,7 +239,7 @@ def test_create_post_with_files(app, db):
             "summary": "A summary",
             "content": "A content",
             "files": [(file1, "file1.pdf"), (file2, "file2.png")],
-            "names": ["name1.pdf", "name2.jpg"]
+            "file_names": ["name1.pdf", "name2.jpg"]
         }
 
         response = client.post('/api/posts',
@@ -227,23 +250,21 @@ def test_create_post_with_files(app, db):
 
         data = json.loads(response.data.decode("utf-8"))
 
-        assert post["title"] == data["title"]
-        assert post["content"] == data["content"]
-        assert post["summary"] == data["summary"]
+        assert post["title"] == data["latest_revision"]["title"]
+        assert post["content"] == data["latest_revision"]["content"]
+        assert post["summary"] == data["latest_revision"]["summary"]
 
-        assert "id" in data
-        assert "created_at" in data
+        assert "id" in data["latest_revision"]
+        assert "created_at" in data["latest_revision"]
 
-        assert len(data["files"]) == 2
+        assert len(data["latest_revision"]["files"]) == 2
 
-        files = data["files"]
+        files = data["latest_revision"]["files"]
 
-        assert post["names"][0] == files[0]["name"]
-        assert data["id"] == files[0]["post"]
+        assert post["file_names"][0] == files[0]["name"]
         assert "id" in files[0]
 
-        assert post["names"][1] == files[1]["name"]
-        assert data["id"] == files[1]["post"]
+        assert post["file_names"][1] == files[1]["name"]
         assert "id" in files[1]
 
         filename1 = File.query.filter(
@@ -285,7 +306,7 @@ def test_create_post_with_bad_file_type(app, db):
             "summary": "A summary",
             "content": "A content",
             "files": [(BytesIO(b"<html></html>"), 'test.html')],
-            "names": ["name1.html"]
+            "file_names": ["name1.html"]
         }
 
         response = client.post('/api/posts',
@@ -308,7 +329,7 @@ def test_create_post_with_files_names_mismatch(app, db):
             "summary": "A summary",
             "content": "A content",
             "files": [(BytesIO(b"A test file"), 'test.pdf')],
-            "names": ["name1.pdf", "name2.png"]
+            "file_names": ["name1.pdf", "name2.png"]
         }
 
         response = client.post('/api/posts',
@@ -328,25 +349,19 @@ def test_get_single_post(app, db):
     content = "A few paragraphs of content..."
 
     with app.app_context():
-        post = Post(title=title, summary=summary, content=content)
-        db.session.add(post)
-        db.session.commit()
-        id = post.id
+        id = create_post(app, db, {"title": title,
+                                   "summary": summary, "content": content})
 
     with app.test_client() as client:
         response = client.get(f"/api/posts/{id}")
 
         assert "200" in response.status
 
-        posts = json.loads(response.data.decode("utf-8"))
+        post = json.loads(response.data.decode("utf-8"))
 
-        assert len(posts) == 1
-
-        post = posts[0]
-
-        assert post["title"] == title
-        assert post["summary"] == summary
-        assert post["content"] == content
+        assert post["latest_revision"]["title"] == title
+        assert post["latest_revision"]["summary"] == summary
+        assert post["latest_revision"]["content"] == content
 
 
 def test_get_single_post_that_doesnt_exist(app, db):
@@ -361,10 +376,8 @@ def test_delete_post(app, db):
     content = "A few paragraphs of content..."
 
     with app.app_context():
-        post = Post(title=title, summary=summary, content=content)
-        db.session.add(post)
-        db.session.commit()
-        id = post.id
+        id = create_post(app, db, {"title": title,
+                                   "summary": summary, "content": content})
 
     with app.test_client() as client:
         response = client.delete(f"/api/posts/{id}")
@@ -381,34 +394,25 @@ def test_delete_last_revision(app, db):
     content = "A few paragraphs of content..."
 
     with app.app_context():
-        old = Post(title=title_old, summary=summary,
-                   content=content, is_guideline=True)
-        db.session.add(old)
-        db.session.commit()
-        id = old.post_id
-        new = Post(title=title_new, summary=summary,
-                   content=content, is_guideline=True, post_id=id)
-        old.is_current = False
+        id = create_post(app, db, {"title": title_old,
+                                   "summary": summary, "content": content})
+        new = PostRevision(title=title_new, summary=summary,
+                           content=content, post_id=id)
         db.session.add(new)
         db.session.commit()
-        revision_id = new.id
+        rev_id = new.id
 
     with app.test_client() as client:
-        response = client.delete(f"/api/revisions/{revision_id}")
+        response = client.delete(f"/api/posts/{id}/revisions/{rev_id}")
         assert "204" in response.status
 
         response = client.get(f"/api/posts/{id}")
 
         assert "200" in response.status
 
-        data = json.loads(response.data.decode("utf-8"))
+        post = json.loads(response.data.decode("utf-8"))
 
-        assert len(data) == 1
-
-        post = data[0]
-
-        assert post["is_current"]
-        assert post["title"] == title_old
+        assert post["latest_revision"]["title"] == title_old
         assert post["id"] == id
 
 
@@ -426,7 +430,7 @@ def test_delete_post_with_file(app, db):
             "summary": "A summary",
             "content": "A content",
             "files": [(file_bytes, "file1.pdf")],
-            "names": ["name1.pdf"]
+            "file_names": ["name1.pdf"]
         }
 
         response = client.post('/api/posts',
@@ -437,8 +441,10 @@ def test_delete_post_with_file(app, db):
 
         data = json.loads(response.data.decode("utf-8"))
 
-        filename = File.query.filter(
-            File.id == data["files"][0]["id"]).one_or_none().filename
+        filename = File.query \
+            .filter(File.id == data["latest_revision"]["files"][0]["id"]) \
+            .one_or_none() \
+            .filename
 
         file_path = os.path.join(tests_path, "output", filename)
         assert os.path.isfile(file_path)
@@ -456,10 +462,8 @@ def test_delete_single_post_that_doesnt_exist(app, db):
     content = "A few paragraphs of content..."
 
     with app.app_context():
-        post = Post(title=title, summary=summary, content=content)
-        db.session.add(post)
-        db.session.commit()
-        id = post.id
+        id = create_post(app, db, {"title": title,
+                                   "summary": summary, "content": content})
 
     with app.test_client() as client:
         response = client.delete(f"/api/posts/{id + 1}")
@@ -479,22 +483,20 @@ def test_timezone_utc(app, db):
     content = "A few paragraphs of content..."
 
     with app.app_context():
-        post = Post(title=title, summary=summary, content=content)
-        db.session.add(post)
-        db.session.commit()
-        id = post.id
+        id = create_post(app, db, {"title": title,
+                                   "summary": summary, "content": content})
 
     with app.test_client() as client:
         response = client.get(f"/api/posts/{id}")
 
         assert "200" in response.status
 
-        post = json.loads(response.data.decode("utf-8"))[0]
+        post = json.loads(response.data.decode("utf-8"))
 
         from datetime import datetime, timedelta
 
         utc_now = datetime.utcnow()
         created_at = datetime.fromisoformat(
-            post["created_at"]).replace(tzinfo=None)
+            post["latest_revision"]["created_at"]).replace(tzinfo=None)
 
         assert utc_now - created_at < timedelta(milliseconds=5000)
